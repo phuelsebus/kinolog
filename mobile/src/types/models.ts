@@ -90,3 +90,11 @@ export interface MovieSearchResult {
   releaseDate: string | null;
   posterUrl: string | null;
 }
+
+// Kinobesuch inkl. der zugehoerigen Film- und Kinodaten - wird fuer die
+// Bibliothek (library-ui) und die Detailseite (detail-ui) verwendet, damit
+// dort nicht separat nachgeladen werden muss.
+export interface CinemaVisitWithDetails extends CinemaVisit {
+  movie: Movie;
+  cinema: Cinema;
+}
