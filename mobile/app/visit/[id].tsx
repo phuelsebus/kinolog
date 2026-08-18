@@ -1,5 +1,5 @@
-import { useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -35,6 +35,7 @@ const TICKET_TYPE_LABELS: Record<TicketType, string> = {
 // Filmdaten, Kinodaten, Ticketinformationen, Originalticket, Trailer,
 // Bewertung und persoenliche Notiz.
 export default function CinemaVisitDetailScreen() {
+  const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const [visit, setVisit] = useState<CinemaVisitWithDetails | null>(null);
@@ -42,6 +43,8 @@ export default function CinemaVisitDetailScreen() {
   const [error, setError] = useState<string | null>(null);
   const [ticketImageUrl, setTicketImageUrl] = useState<string | null>(null);
   const [updatingRating, setUpdatingRating] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -61,9 +64,26 @@ export default function CinemaVisitDetailScreen() {
     }
   }, [id]);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  // Neu laden bei Fokus, damit Aenderungen aus /edit-visit (Kino, Datum, ...)
+  // nach der Rueckkehr sichtbar sind (gleiches Muster wie (tabs)/index.tsx).
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load])
+  );
+
+  async function handleDelete() {
+    if (!visit) return;
+    setDeleting(true);
+    try {
+      await cinemaVisitService.deleteVisit(visit.id);
+      router.replace('/(tabs)');
+    } catch {
+      setError('Kinobesuch konnte nicht gelöscht werden.');
+      setDeleting(false);
+      setConfirmingDelete(false);
+    }
+  }
 
   async function handleRatingChange(newRating: number) {
     if (!visit) return;
@@ -176,6 +196,31 @@ export default function CinemaVisitDetailScreen() {
           <Text style={styles.bodyText}>{visit.comment}</Text>
         </>
       ) : null}
+
+      <View style={styles.actions}>
+        <Pressable
+          style={styles.editButton}
+          onPress={() => router.push({ pathname: '/edit-visit', params: { visitId: visit.id } })}
+        >
+          <Text style={styles.editButtonText}>Bearbeiten</Text>
+        </Pressable>
+
+        {confirmingDelete ? (
+          <View style={styles.confirmDeleteRow}>
+            <Text style={styles.confirmDeleteText}>Wirklich löschen?</Text>
+            <Pressable style={styles.deleteConfirmButton} onPress={handleDelete} disabled={deleting}>
+              {deleting ? <ActivityIndicator color="#fff" /> : <Text style={styles.deleteConfirmButtonText}>Ja, löschen</Text>}
+            </Pressable>
+            <Pressable onPress={() => setConfirmingDelete(false)} disabled={deleting}>
+              <Text style={styles.cancelDeleteText}>Abbrechen</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <Pressable style={styles.deleteButton} onPress={() => setConfirmingDelete(true)}>
+            <Text style={styles.deleteButtonText}>Löschen</Text>
+          </Pressable>
+        )}
+      </View>
     </ScrollView>
   );
 }
@@ -206,5 +251,28 @@ const styles = StyleSheet.create({
   bodyText: { marginHorizontal: 16, fontSize: 15 },
   overview: { marginHorizontal: 16, color: '#333', lineHeight: 20 },
   ticketImage: { width: '100%', height: 300, marginTop: 8, backgroundColor: '#f2f2f2' },
+  actions: { marginHorizontal: 16, marginTop: 32, gap: 12 },
+  editButton: {
+    borderWidth: 1,
+    borderColor: '#111',
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  editButtonText: { fontWeight: '600' },
+  deleteButton: { alignItems: 'center', paddingVertical: 8 },
+  deleteButtonText: { color: '#c0392b', fontWeight: '600' },
+  confirmDeleteRow: { alignItems: 'center', gap: 8 },
+  confirmDeleteText: { color: '#c0392b' },
+  deleteConfirmButton: {
+    backgroundColor: '#c0392b',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    minWidth: 160,
+  },
+  deleteConfirmButtonText: { color: '#fff', fontWeight: '600' },
+  cancelDeleteText: { color: '#666' },
 });
 
