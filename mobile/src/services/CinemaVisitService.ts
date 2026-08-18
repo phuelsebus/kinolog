@@ -26,6 +26,8 @@ export interface CreateCinemaVisitInput {
 // cinema_visits) inkl. Verknuepfung zu Movie/Cinema und TicketExtraction.
 export interface CinemaVisitService {
   createVisit(input: CreateCinemaVisitInput): Promise<CinemaVisit>;
+  updateVisit(id: string, input: CreateCinemaVisitInput): Promise<CinemaVisit>;
+  deleteVisit(id: string): Promise<void>;
   listVisits(): Promise<CinemaVisitWithDetails[]>;
   getVisit(id: string): Promise<CinemaVisitWithDetails | null>;
   updateRating(id: string, rating: number): Promise<CinemaVisit>;
@@ -69,6 +71,35 @@ export const cinemaVisitService: CinemaVisitService = {
 
     if (error) throw error;
     return mapCinemaVisitRow(data as CinemaVisitRow);
+  },
+
+  async updateVisit(id: string, input: CreateCinemaVisitInput): Promise<CinemaVisit> {
+    const { data, error } = await supabase
+      .from('cinema_visits')
+      .update({
+        movie_id: input.movieId,
+        cinema_id: input.cinemaId,
+        watched_at: input.watchedAt,
+        show_time: input.showTime ?? null,
+        hall: input.hall ?? null,
+        row: input.row ?? null,
+        seat: input.seat ?? null,
+        ticket_price: input.ticketPrice ?? null,
+        ticket_type: input.ticketType ?? null,
+        rating: input.rating ?? null,
+        comment: input.comment ?? null,
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return mapCinemaVisitRow(data as CinemaVisitRow);
+  },
+
+  async deleteVisit(id: string): Promise<void> {
+    const { error } = await supabase.from('cinema_visits').delete().eq('id', id);
+    if (error) throw error;
   },
 
   async listVisits(): Promise<CinemaVisitWithDetails[]> {

@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -18,6 +18,7 @@ import type { MovieSearchResult } from '../src/types/models';
 // Nutzerentscheidung 2026-08-13: Hauptflow ist manuelle Filmsuche.
 export default function SearchMovieScreen() {
   const router = useRouter();
+  const { editVisitId } = useLocalSearchParams<{ editVisitId?: string }>();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<MovieSearchResult[]>([]);
   const [searching, setSearching] = useState(false);
@@ -48,10 +49,24 @@ export default function SearchMovieScreen() {
     setError(null);
     try {
       const movie = await tmdbMovieProvider.getMovie(result.providerId);
-      router.push({
-        pathname: '/new-visit',
-        params: { movieId: movie.id, movieTitle: movie.title, moviePosterUrl: movie.posterUrl ?? '' },
-      });
+      if (editVisitId) {
+        // Rueckkehr zu einer bereits offenen edit-visit-Instanz (siehe
+        // edit-visit.tsx "Film ändern") statt eines neuen Stack-Eintrags.
+        router.dismissTo({
+          pathname: '/edit-visit',
+          params: {
+            visitId: editVisitId,
+            movieId: movie.id,
+            movieTitle: movie.title,
+            moviePosterUrl: movie.posterUrl ?? '',
+          },
+        });
+      } else {
+        router.push({
+          pathname: '/new-visit',
+          params: { movieId: movie.id, movieTitle: movie.title, moviePosterUrl: movie.posterUrl ?? '' },
+        });
+      }
     } catch {
       setError('Filmdaten konnten nicht geladen werden. Bitte versuche es erneut.');
     } finally {
