@@ -1,10 +1,24 @@
 import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { AuthProvider } from '../src/context/AuthContext';
+import { ThemeProvider, useTheme } from '../src/theme/ThemeContext';
+import { ThemeToggleButton } from '../src/theme/ThemeToggleButton';
 
-export default function RootLayout() {
+function ThemedStack() {
+  const { colors, mode } = useTheme();
+
   return (
-    <AuthProvider>
-      <Stack>
+    <>
+      <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
+      <Stack
+        screenOptions={{
+          headerStyle: { backgroundColor: colors.surface },
+          headerTintColor: colors.textPrimary,
+          headerShadowVisible: false,
+          contentStyle: { backgroundColor: colors.background },
+          headerRight: () => <ThemeToggleButton />,
+        }}
+      >
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="visit/[id]" options={{ title: 'Kinobesuch' }} />
@@ -12,6 +26,16 @@ export default function RootLayout() {
         <Stack.Screen name="new-visit" options={{ title: 'Kinobesuch erfassen', presentation: 'modal' }} />
         <Stack.Screen name="edit-visit" options={{ title: 'Kinobesuch bearbeiten', presentation: 'modal' }} />
       </Stack>
-    </AuthProvider>
+    </>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <ThemeProvider>
+      <AuthProvider>
+        <ThemedStack />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

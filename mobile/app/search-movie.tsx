@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -11,6 +11,9 @@ import {
   View,
 } from 'react-native';
 import { tmdbMovieProvider } from '../src/services/MovieProvider';
+import { radius, spacing } from '../src/theme/spacing';
+import { useTheme } from '../src/theme/ThemeContext';
+import type { ThemeColors } from '../src/theme/colors';
 import type { MovieSearchResult } from '../src/types/models';
 
 // Manuelle Filmsuche UI (idee.md: "Film-Suche über TMDB"). Ersetzt den
@@ -19,6 +22,8 @@ import type { MovieSearchResult } from '../src/types/models';
 export default function SearchMovieScreen() {
   const router = useRouter();
   const { editVisitId } = useLocalSearchParams<{ editVisitId?: string }>();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<MovieSearchResult[]>([]);
   const [searching, setSearching] = useState(false);
@@ -80,14 +85,23 @@ export default function SearchMovieScreen() {
         <TextInput
           style={styles.input}
           placeholder="Filmtitel eingeben..."
+          placeholderTextColor={colors.textSecondary}
           value={query}
           onChangeText={setQuery}
           onSubmitEditing={handleSearch}
           returnKeyType="search"
           autoFocus
         />
-        <Pressable style={styles.searchButton} onPress={handleSearch} disabled={searching}>
-          {searching ? <ActivityIndicator color="#fff" /> : <Text style={styles.searchButtonText}>Suchen</Text>}
+        <Pressable
+          style={({ pressed }) => [styles.searchButton, pressed && styles.searchButtonPressed]}
+          onPress={handleSearch}
+          disabled={searching}
+        >
+          {searching ? (
+            <ActivityIndicator color={colors.accentText} />
+          ) : (
+            <Text style={styles.searchButtonText}>Suchen</Text>
+          )}
         </Pressable>
       </View>
 
@@ -100,9 +114,10 @@ export default function SearchMovieScreen() {
       <FlatList
         data={results}
         keyExtractor={(item) => item.providerId}
+        contentContainerStyle={styles.list}
         renderItem={({ item }) => (
           <Pressable
-            style={styles.resultRow}
+            style={({ pressed }) => [styles.resultRow, pressed && styles.resultRowPressed]}
             onPress={() => handleSelect(item)}
             disabled={selectingId !== null}
           >
@@ -117,7 +132,7 @@ export default function SearchMovieScreen() {
                 <Text style={styles.resultYear}>{item.releaseDate.slice(0, 4)}</Text>
               ) : null}
             </View>
-            {selectingId === item.providerId ? <ActivityIndicator /> : null}
+            {selectingId === item.providerId ? <ActivityIndicator color={colors.accent} /> : null}
           </Pressable>
         )}
       />
@@ -125,38 +140,47 @@ export default function SearchMovieScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, gap: 12 },
-  searchRow: { flexDirection: 'row', gap: 8 },
-  input: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    fontSize: 16,
-  },
-  searchButton: {
-    backgroundColor: '#111',
-    borderRadius: 8,
-    paddingHorizontal: 18,
-    justifyContent: 'center',
-  },
-  searchButtonText: { color: '#fff', fontWeight: '600' },
-  error: { color: '#c0392b' },
-  emptyText: { color: '#666', textAlign: 'center', marginTop: 24 },
-  resultRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#ddd',
-  },
-  poster: { width: 46, height: 69, borderRadius: 4, backgroundColor: '#eee' },
-  posterPlaceholder: { alignItems: 'center', justifyContent: 'center' },
-  resultInfo: { flex: 1 },
-  resultTitle: { fontSize: 16, fontWeight: '500' },
-  resultYear: { color: '#666', marginTop: 2 },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, padding: spacing.lg, gap: spacing.md, backgroundColor: colors.background },
+    searchRow: { flexDirection: 'row', gap: spacing.sm },
+    input: {
+      flex: 1,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radius.md,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm + 2,
+      fontSize: 16,
+      color: colors.textPrimary,
+    },
+    searchButton: {
+      backgroundColor: colors.accent,
+      borderRadius: radius.md,
+      paddingHorizontal: spacing.lg,
+      justifyContent: 'center',
+    },
+    searchButtonPressed: { opacity: 0.85 },
+    searchButtonText: { color: colors.accentText, fontWeight: '600' },
+    error: { color: colors.error },
+    emptyText: { color: colors.textSecondary, textAlign: 'center', marginTop: spacing.xl },
+    list: { gap: spacing.sm },
+    resultRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+      padding: spacing.sm + 2,
+      backgroundColor: colors.surface,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    resultRowPressed: { opacity: 0.75 },
+    poster: { width: 46, height: 69, borderRadius: radius.sm, backgroundColor: colors.surfaceAlt },
+    posterPlaceholder: { alignItems: 'center', justifyContent: 'center' },
+    resultInfo: { flex: 1 },
+    resultTitle: { fontSize: 16, fontWeight: '500', color: colors.textPrimary },
+    resultYear: { color: colors.textSecondary, marginTop: 2 },
+  });
+}

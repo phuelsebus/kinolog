@@ -1,5 +1,6 @@
+import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -11,6 +12,9 @@ import {
   View,
 } from 'react-native';
 import { cinemaVisitService } from '../../src/services/CinemaVisitService';
+import { radius, spacing } from '../../src/theme/spacing';
+import { useTheme } from '../../src/theme/ThemeContext';
+import type { ThemeColors } from '../../src/theme/colors';
 import type { CinemaVisitWithDetails } from '../../src/types/models';
 
 function formatDate(isoDate: string): string {
@@ -18,10 +22,10 @@ function formatDate(isoDate: string): string {
   return `${day}.${month}.${year}`;
 }
 
-function StarRating({ rating }: { rating: number | null }) {
+function StarRating({ rating, color }: { rating: number | null; color: string }) {
   if (rating === null) return null;
   return (
-    <Text style={styles.rating}>
+    <Text style={{ color, marginTop: 2 }}>
       {'★'.repeat(rating)}
       {'☆'.repeat(5 - rating)}
     </Text>
@@ -31,6 +35,8 @@ function StarRating({ rating }: { rating: number | null }) {
 // Bibliothek (idee.md Abschnitt 8): chronologische Liste aller Kinobesuche
 // mit Poster, Filmtitel, Datum, Kino, Bewertung.
 export default function LibraryScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [visits, setVisits] = useState<CinemaVisitWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -62,7 +68,7 @@ export default function LibraryScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator />
+        <ActivityIndicator color={colors.accent} />
       </View>
     );
   }
@@ -74,19 +80,22 @@ export default function LibraryScreen() {
       <FlatList
         data={visits}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={visits.length === 0 ? styles.emptyList : undefined}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadVisits(true)} />}
+        contentContainerStyle={visits.length === 0 ? styles.emptyList : styles.list}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={() => loadVisits(true)} tintColor={colors.accent} />
+        }
         ListEmptyComponent={
           <View style={styles.centered}>
+            <Ionicons name="film-outline" size={40} color={colors.textSecondary} style={{ marginBottom: spacing.md }} />
             <Text style={styles.emptyTitle}>Noch keine Kinobesuche</Text>
             <Text style={styles.emptyHint}>
-              Tippe unten auf "+ Kinobesuch", um deinen ersten Eintrag anzulegen.
+              Tippe unten auf "Kinobesuch", um deinen ersten Eintrag anzulegen.
             </Text>
           </View>
         }
         renderItem={({ item }) => (
           <Pressable
-            style={styles.row}
+            style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
             onPress={() => router.push({ pathname: '/visit/[id]', params: { id: item.id } })}
           >
             {item.movie.posterUrl ? (
@@ -99,53 +108,66 @@ export default function LibraryScreen() {
               <Text style={styles.meta}>
                 {formatDate(item.watchedAt)} · {item.cinema.name}
               </Text>
-              <StarRating rating={item.rating} />
+              <StarRating rating={item.rating} color={colors.rating} />
             </View>
           </Pressable>
         )}
       />
 
-      <Pressable style={styles.fab} onPress={() => router.push('/search-movie')}>
-        <Text style={styles.fabText}>+ Kinobesuch</Text>
+      <Pressable
+        style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]}
+        onPress={() => router.push('/search-movie')}
+      >
+        <Ionicons name="add" size={20} color={colors.accentText} />
+        <Text style={styles.fabText}>Kinobesuch</Text>
       </Pressable>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  emptyList: { flexGrow: 1 },
-  emptyTitle: { fontSize: 18, fontWeight: '600', marginBottom: 8 },
-  emptyHint: { color: '#666', textAlign: 'center' },
-  error: { color: '#c0392b', textAlign: 'center', padding: 12 },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    padding: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#ddd',
-  },
-  poster: { width: 56, height: 84, borderRadius: 6, backgroundColor: '#eee' },
-  posterPlaceholder: {},
-  info: { flex: 1, gap: 2 },
-  movieTitle: { fontSize: 16, fontWeight: '600' },
-  meta: { color: '#666' },
-  rating: { color: '#f5a623', marginTop: 2 },
-  fab: {
-    position: 'absolute',
-    right: 16,
-    bottom: 16,
-    backgroundColor: '#111',
-    borderRadius: 24,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-  },
-  fabText: { color: '#fff', fontWeight: '600' },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
+    list: { padding: spacing.lg, gap: spacing.md },
+    emptyList: { flexGrow: 1 },
+    emptyTitle: { fontSize: 18, fontWeight: '600', marginBottom: spacing.sm, color: colors.textPrimary },
+    emptyHint: { color: colors.textSecondary, textAlign: 'center' },
+    error: { color: colors.error, textAlign: 'center', padding: spacing.md },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+      padding: spacing.md,
+      backgroundColor: colors.surface,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    rowPressed: { opacity: 0.75 },
+    poster: { width: 56, height: 84, borderRadius: radius.sm, backgroundColor: colors.surfaceAlt },
+    posterPlaceholder: {},
+    info: { flex: 1, gap: 2 },
+    movieTitle: { fontSize: 16, fontWeight: '600', color: colors.textPrimary },
+    meta: { color: colors.textSecondary },
+    fab: {
+      position: 'absolute',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      right: spacing.lg,
+      bottom: spacing.lg,
+      backgroundColor: colors.accent,
+      borderRadius: radius.pill,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.lg,
+      shadowColor: '#000',
+      shadowOpacity: 0.15,
+      shadowOffset: { width: 0, height: 4 },
+      shadowRadius: 10,
+      elevation: 3,
+    },
+    fabPressed: { opacity: 0.9 },
+    fabText: { color: colors.accentText, fontWeight: '600' },
+  });
+}
