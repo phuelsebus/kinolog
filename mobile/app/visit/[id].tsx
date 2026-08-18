@@ -1,5 +1,6 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -12,6 +13,9 @@ import {
 } from 'react-native';
 import { getTicketImageSignedUrl } from '../../src/lib/ticketImages';
 import { cinemaVisitService } from '../../src/services/CinemaVisitService';
+import { radius, spacing } from '../../src/theme/spacing';
+import { useTheme } from '../../src/theme/ThemeContext';
+import type { ThemeColors } from '../../src/theme/colors';
 import type { CinemaVisitWithDetails, TicketType } from '../../src/types/models';
 
 function formatDate(isoDate: string): string {
@@ -37,6 +41,8 @@ const TICKET_TYPE_LABELS: Record<TicketType, string> = {
 export default function CinemaVisitDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const [visit, setVisit] = useState<CinemaVisitWithDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -102,7 +108,7 @@ export default function CinemaVisitDetailScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator />
+        <ActivityIndicator color={colors.accent} />
       </View>
     );
   }
@@ -146,8 +152,12 @@ export default function CinemaVisitDetailScreen() {
       </View>
 
       {movie.trailerUrl ? (
-        <Pressable style={styles.trailerButton} onPress={() => Linking.openURL(movie.trailerUrl!)}>
-          <Text style={styles.trailerButtonText}>▶ Trailer ansehen</Text>
+        <Pressable
+          style={({ pressed }) => [styles.trailerButton, pressed && styles.trailerButtonPressed]}
+          onPress={() => Linking.openURL(movie.trailerUrl!)}
+        >
+          <Ionicons name="play-circle" size={20} color={colors.accentText} />
+          <Text style={styles.trailerButtonText}>Trailer ansehen</Text>
         </Pressable>
       ) : null}
 
@@ -199,17 +209,26 @@ export default function CinemaVisitDetailScreen() {
 
       <View style={styles.actions}>
         <Pressable
-          style={styles.editButton}
+          style={({ pressed }) => [styles.editButton, pressed && styles.editButtonPressed]}
           onPress={() => router.push({ pathname: '/edit-visit', params: { visitId: visit.id } })}
         >
+          <Ionicons name="create-outline" size={18} color={colors.accent} />
           <Text style={styles.editButtonText}>Bearbeiten</Text>
         </Pressable>
 
         {confirmingDelete ? (
           <View style={styles.confirmDeleteRow}>
             <Text style={styles.confirmDeleteText}>Wirklich löschen?</Text>
-            <Pressable style={styles.deleteConfirmButton} onPress={handleDelete} disabled={deleting}>
-              {deleting ? <ActivityIndicator color="#fff" /> : <Text style={styles.deleteConfirmButtonText}>Ja, löschen</Text>}
+            <Pressable
+              style={({ pressed }) => [styles.deleteConfirmButton, pressed && styles.deleteConfirmButtonPressed]}
+              onPress={handleDelete}
+              disabled={deleting}
+            >
+              {deleting ? (
+                <ActivityIndicator color={colors.accentText} />
+              ) : (
+                <Text style={styles.deleteConfirmButtonText}>Ja, löschen</Text>
+              )}
             </Pressable>
             <Pressable onPress={() => setConfirmingDelete(false)} disabled={deleting}>
               <Text style={styles.cancelDeleteText}>Abbrechen</Text>
@@ -217,6 +236,7 @@ export default function CinemaVisitDetailScreen() {
           </View>
         ) : (
           <Pressable style={styles.deleteButton} onPress={() => setConfirmingDelete(true)}>
+            <Ionicons name="trash-outline" size={16} color={colors.error} />
             <Text style={styles.deleteButtonText}>Löschen</Text>
           </Pressable>
         )}
@@ -225,54 +245,71 @@ export default function CinemaVisitDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { paddingBottom: 48 },
-  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  error: { color: '#c0392b', textAlign: 'center' },
-  backdrop: { width: '100%', height: 180, backgroundColor: '#eee' },
-  headerRow: { flexDirection: 'row', gap: 12, padding: 16 },
-  poster: { width: 90, height: 135, borderRadius: 8, backgroundColor: '#eee' },
-  headerInfo: { flex: 1, justifyContent: 'center', gap: 4 },
-  movieTitle: { fontSize: 20, fontWeight: '700' },
-  originalTitle: { color: '#666', fontStyle: 'italic' },
-  metaText: { color: '#666' },
-  starsRow: { flexDirection: 'row', gap: 6, paddingHorizontal: 16, marginBottom: 8 },
-  star: { fontSize: 28, color: '#f5a623' },
-  trailerButton: {
-    marginHorizontal: 16,
-    marginBottom: 16,
-    backgroundColor: '#111',
-    borderRadius: 8,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  trailerButtonText: { color: '#fff', fontWeight: '600' },
-  sectionTitle: { fontSize: 16, fontWeight: '700', marginTop: 16, marginHorizontal: 16, marginBottom: 4 },
-  bodyText: { marginHorizontal: 16, fontSize: 15 },
-  overview: { marginHorizontal: 16, color: '#333', lineHeight: 20 },
-  ticketImage: { width: '100%', height: 300, marginTop: 8, backgroundColor: '#f2f2f2' },
-  actions: { marginHorizontal: 16, marginTop: 32, gap: 12 },
-  editButton: {
-    borderWidth: 1,
-    borderColor: '#111',
-    borderRadius: 8,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  editButtonText: { fontWeight: '600' },
-  deleteButton: { alignItems: 'center', paddingVertical: 8 },
-  deleteButtonText: { color: '#c0392b', fontWeight: '600' },
-  confirmDeleteRow: { alignItems: 'center', gap: 8 },
-  confirmDeleteText: { color: '#c0392b' },
-  deleteConfirmButton: {
-    backgroundColor: '#c0392b',
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    alignItems: 'center',
-    minWidth: 160,
-  },
-  deleteConfirmButtonText: { color: '#fff', fontWeight: '600' },
-  cancelDeleteText: { color: '#666' },
-});
-
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { paddingBottom: spacing.xxl + spacing.lg, backgroundColor: colors.background },
+    centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl, backgroundColor: colors.background },
+    error: { color: colors.error, textAlign: 'center' },
+    backdrop: { width: '100%', height: 180, backgroundColor: colors.surfaceAlt },
+    headerRow: { flexDirection: 'row', gap: spacing.md, padding: spacing.lg },
+    poster: { width: 90, height: 135, borderRadius: radius.md, backgroundColor: colors.surfaceAlt },
+    headerInfo: { flex: 1, justifyContent: 'center', gap: spacing.xs },
+    movieTitle: { fontSize: 20, fontWeight: '700', color: colors.textPrimary },
+    originalTitle: { color: colors.textSecondary, fontStyle: 'italic' },
+    metaText: { color: colors.textSecondary },
+    starsRow: { flexDirection: 'row', gap: spacing.sm, paddingHorizontal: spacing.lg, marginBottom: spacing.sm },
+    star: { fontSize: 28, color: colors.rating },
+    trailerButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.xs,
+      marginHorizontal: spacing.lg,
+      marginBottom: spacing.lg,
+      backgroundColor: colors.accent,
+      borderRadius: radius.md,
+      paddingVertical: spacing.md,
+    },
+    trailerButtonPressed: { opacity: 0.85 },
+    trailerButtonText: { color: colors.accentText, fontWeight: '600' },
+    sectionTitle: {
+      fontSize: 16,
+      fontWeight: '700',
+      marginTop: spacing.lg,
+      marginHorizontal: spacing.lg,
+      marginBottom: spacing.xs,
+      color: colors.textPrimary,
+    },
+    bodyText: { marginHorizontal: spacing.lg, fontSize: 15, color: colors.textPrimary },
+    overview: { marginHorizontal: spacing.lg, color: colors.textSecondary, lineHeight: 20 },
+    ticketImage: { width: '100%', height: 300, marginTop: spacing.sm, backgroundColor: colors.surfaceAlt },
+    actions: { marginHorizontal: spacing.lg, marginTop: spacing.xxl, gap: spacing.md },
+    editButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.xs,
+      borderWidth: 1,
+      borderColor: colors.accent,
+      borderRadius: radius.md,
+      paddingVertical: spacing.md,
+    },
+    editButtonPressed: { opacity: 0.75 },
+    editButtonText: { fontWeight: '600', color: colors.accent },
+    deleteButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, paddingVertical: spacing.sm },
+    deleteButtonText: { color: colors.error, fontWeight: '600' },
+    confirmDeleteRow: { alignItems: 'center', gap: spacing.sm },
+    confirmDeleteText: { color: colors.error },
+    deleteConfirmButton: {
+      backgroundColor: colors.error,
+      borderRadius: radius.md,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.xl,
+      alignItems: 'center',
+      minWidth: 160,
+    },
+    deleteConfirmButtonPressed: { opacity: 0.85 },
+    deleteConfirmButtonText: { color: colors.accentText, fontWeight: '600' },
+    cancelDeleteText: { color: colors.textSecondary },
+  });
+}

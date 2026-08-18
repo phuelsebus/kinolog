@@ -1,8 +1,11 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import VisitForm from '../src/components/VisitForm';
 import { cinemaVisitService } from '../src/services/CinemaVisitService';
+import { radius, spacing } from '../src/theme/spacing';
+import { useTheme } from '../src/theme/ThemeContext';
+import type { ThemeColors } from '../src/theme/colors';
 import type { CinemaVisitWithDetails } from '../src/types/models';
 
 // Bearbeiten eines bestehenden Kinobesuchs. Laedt den Visit per getVisit und
@@ -12,6 +15,8 @@ import type { CinemaVisitWithDetails } from '../src/types/models';
 // hierher zurueck (siehe search-movie.tsx handleSelect).
 export default function EditVisitScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const {
     visitId,
     movieId: overrideMovieId,
@@ -56,7 +61,7 @@ export default function EditVisitScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator />
+        <ActivityIndicator color={colors.accent} />
       </View>
     );
   }
@@ -114,12 +119,14 @@ export default function EditVisitScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  error: { color: '#c0392b', textAlign: 'center' },
-  movieRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
-  poster: { width: 60, height: 90, borderRadius: 6 },
-  movieInfo: { flex: 1, gap: 4 },
-  movieTitle: { fontSize: 18, fontWeight: '700', flexShrink: 1 },
-  changeLink: { color: '#2563eb' },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl, backgroundColor: colors.background },
+    error: { color: colors.error, textAlign: 'center' },
+    movieRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.lg },
+    poster: { width: 60, height: 90, borderRadius: radius.sm, backgroundColor: colors.surfaceAlt },
+    movieInfo: { flex: 1, gap: spacing.xs },
+    movieTitle: { fontSize: 18, fontWeight: '700', flexShrink: 1, color: colors.textPrimary },
+    changeLink: { color: colors.accent, fontWeight: '500' },
+  });
+}

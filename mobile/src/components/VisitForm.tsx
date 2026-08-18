@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -9,6 +9,9 @@ import {
   View,
 } from 'react-native';
 import { cinemaService, type OsmCinemaCandidate } from '../services/CinemaService';
+import { radius, spacing } from '../theme/spacing';
+import { useTheme } from '../theme/ThemeContext';
+import type { ThemeColors } from '../theme/colors';
 import type { Cinema, TicketType } from '../types/models';
 
 const DATE_REGEX = /^\d{2}\.\d{2}\.\d{4}$/;
@@ -76,6 +79,9 @@ export default function VisitForm({
   submitErrorMessage,
   onSubmit,
 }: VisitFormProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   // Kino: Suche + Neuanlage, da es dafuer keine externe API wie TMDB gibt.
   const [cinemaQuery, setCinemaQuery] = useState('');
   const [cinemaResults, setCinemaResults] = useState<Cinema[]>([]);
@@ -264,23 +270,24 @@ export default function VisitForm({
           <TextInput
             style={styles.input}
             placeholder="Kino suchen..."
+            placeholderTextColor={colors.textSecondary}
             value={cinemaQuery}
             onChangeText={(text) => {
               setCinemaQuery(text);
               setShowNewCinemaForm(false);
             }}
           />
-          {searchingCinemas ? <ActivityIndicator style={{ marginTop: 8 }} /> : null}
+          {searchingCinemas ? <ActivityIndicator color={colors.accent} style={{ marginTop: spacing.sm }} /> : null}
           {cinemaResults.map((cinema) => (
             <Pressable
               key={cinema.id}
-              style={styles.cinemaResultRow}
+              style={({ pressed }) => [styles.cinemaResultRow, pressed && styles.rowPressed]}
               onPress={() => {
                 setSelectedCinema(cinema);
                 setCinemaResults([]);
               }}
             >
-              <Text>
+              <Text style={styles.resultText}>
                 {cinema.name}
                 {cinema.city ? ` · ${cinema.city}` : ''}
               </Text>
@@ -294,16 +301,21 @@ export default function VisitForm({
                 <TextInput
                   style={[styles.input, styles.osmCityInput]}
                   placeholder="Stadt, z.B. Hamburg"
+                  placeholderTextColor={colors.textSecondary}
                   value={osmCityQuery}
                   onChangeText={setOsmCityQuery}
                 />
                 <Pressable
-                  style={styles.secondaryButton}
+                  style={({ pressed }) => [
+                    styles.secondaryButton,
+                    pressed && styles.secondaryButtonPressed,
+                    (!osmCityQuery.trim() || searchingOsm) && styles.secondaryButtonDisabled,
+                  ]}
                   onPress={handleSearchOsm}
                   disabled={!osmCityQuery.trim() || searchingOsm}
                 >
                   {searchingOsm ? (
-                    <ActivityIndicator />
+                    <ActivityIndicator color={colors.accent} />
                   ) : (
                     <Text style={styles.secondaryButtonText}>Suchen</Text>
                   )}
@@ -313,11 +325,11 @@ export default function VisitForm({
               {osmResults.map((candidate, index) => (
                 <Pressable
                   key={`${candidate.name}-${index}`}
-                  style={styles.cinemaResultRow}
+                  style={({ pressed }) => [styles.cinemaResultRow, pressed && styles.rowPressed]}
                   onPress={() => handleSelectOsmCandidate(candidate)}
                   disabled={creatingOsmCinema}
                 >
-                  <Text>
+                  <Text style={styles.resultText}>
                     {candidate.name}
                     {candidate.city ? ` · ${candidate.city}` : ''}
                   </Text>
@@ -337,12 +349,17 @@ export default function VisitForm({
                 <TextInput
                   style={styles.input}
                   placeholder="Stadt (optional)"
+                  placeholderTextColor={colors.textSecondary}
                   value={newCinemaCity}
                   onChangeText={setNewCinemaCity}
                 />
-                <Pressable style={styles.secondaryButton} onPress={handleCreateCinema} disabled={creatingCinema}>
+                <Pressable
+                  style={({ pressed }) => [styles.secondaryButton, pressed && styles.secondaryButtonPressed]}
+                  onPress={handleCreateCinema}
+                  disabled={creatingCinema}
+                >
                   {creatingCinema ? (
-                    <ActivityIndicator />
+                    <ActivityIndicator color={colors.accent} />
                   ) : (
                     <Text style={styles.secondaryButtonText}>"{cinemaQuery.trim()}" anlegen</Text>
                   )}
@@ -360,14 +377,21 @@ export default function VisitForm({
       <Text style={styles.sectionLabel}>Datum *</Text>
       <TextInput
         style={styles.input}
-        placeholder="TT.MM.JJJJ, z.B. 08.08.2026"
+        placeholder="z.B. 01.01.2026"
+        placeholderTextColor={colors.textSecondary}
         keyboardType="number-pad"
         value={watchedAt}
         onChangeText={(text) => setWatchedAt(formatDateInput(text))}
       />
 
       <Text style={styles.sectionLabel}>Uhrzeit</Text>
-      <TextInput style={styles.input} placeholder="HH:MM, z.B. 20:15" value={showTime} onChangeText={setShowTime} />
+      <TextInput
+        style={styles.input}
+        placeholder="z.B. 19:00"
+        placeholderTextColor={colors.textSecondary}
+        value={showTime}
+        onChangeText={setShowTime}
+      />
 
       <View style={styles.row3}>
         <View style={styles.row3Item}>
@@ -388,6 +412,7 @@ export default function VisitForm({
       <TextInput
         style={styles.input}
         placeholder="z.B. 14.90"
+        placeholderTextColor={colors.textSecondary}
         keyboardType="decimal-pad"
         value={ticketPrice}
         onChangeText={setTicketPrice}
@@ -428,79 +453,102 @@ export default function VisitForm({
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
-      <Pressable style={styles.submitButton} onPress={handleSubmit} disabled={submitting}>
-        {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitButtonText}>{submitLabel}</Text>}
+      <Pressable
+        style={({ pressed }) => [styles.submitButton, pressed && styles.submitButtonPressed]}
+        onPress={handleSubmit}
+        disabled={submitting}
+      >
+        {submitting ? (
+          <ActivityIndicator color={colors.accentText} />
+        ) : (
+          <Text style={styles.submitButtonText}>{submitLabel}</Text>
+        )}
       </Pressable>
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { padding: 16, gap: 4, paddingBottom: 48 },
-  sectionLabel: { fontWeight: '600', marginTop: 14, marginBottom: 6 },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 15,
-  },
-  multiline: { minHeight: 70, textAlignVertical: 'top' },
-  selectedCinema: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#111',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  selectedCinemaText: { fontSize: 15, flexShrink: 1 },
-  changeLink: { color: '#2563eb', marginTop: 6 },
-  cinemaResultRow: {
-    paddingVertical: 8,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#ddd',
-  },
-  osmSearchBlock: { marginTop: 8, gap: 8 },
-  osmLabel: { color: '#666', fontSize: 13 },
-  osmSearchRow: { flexDirection: 'row', gap: 8 },
-  osmCityInput: { flex: 1 },
-  osmAddress: { color: '#666', fontSize: 13 },
-  osmEmptyText: { color: '#666', fontSize: 13 },
-  newCinemaForm: { marginTop: 8, gap: 8 },
-  secondaryButton: {
-    borderWidth: 1,
-    borderColor: '#111',
-    borderRadius: 8,
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  secondaryButtonText: { fontWeight: '600' },
-  row3: { flexDirection: 'row', gap: 8 },
-  row3Item: { flex: 1 },
-  ticketTypeRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
-  ticketTypeChip: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  ticketTypeChipActive: { backgroundColor: '#111', borderColor: '#111' },
-  ticketTypeText: { color: '#111' },
-  ticketTypeTextActive: { color: '#fff' },
-  starsRow: { flexDirection: 'row', gap: 6 },
-  star: { fontSize: 32, color: '#f5a623' },
-  error: { color: '#c0392b', marginTop: 12 },
-  submitButton: {
-    backgroundColor: '#111',
-    borderRadius: 8,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  submitButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { padding: spacing.lg, gap: spacing.xs, paddingBottom: spacing.xxl + spacing.lg },
+    sectionLabel: { fontWeight: '600', marginTop: spacing.lg, marginBottom: spacing.sm, color: colors.textPrimary },
+    input: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radius.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm + 2,
+      fontSize: 15,
+      color: colors.textPrimary,
+    },
+    multiline: { minHeight: 70, textAlignVertical: 'top' },
+    selectedCinema: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.accent,
+      borderRadius: radius.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm + 2,
+    },
+    selectedCinemaText: { fontSize: 15, flexShrink: 1, color: colors.textPrimary },
+    changeLink: { color: colors.accent, marginTop: spacing.sm, fontWeight: '500' },
+    resultText: { color: colors.textPrimary },
+    rowPressed: { opacity: 0.7 },
+    cinemaResultRow: {
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+      backgroundColor: colors.surface,
+      borderRadius: radius.sm,
+      marginTop: spacing.xs,
+    },
+    osmSearchBlock: { marginTop: spacing.sm, gap: spacing.sm },
+    osmLabel: { color: colors.textSecondary, fontSize: 13 },
+    osmSearchRow: { flexDirection: 'row', gap: spacing.sm },
+    osmCityInput: { flex: 1 },
+    osmAddress: { color: colors.textSecondary, fontSize: 13 },
+    osmEmptyText: { color: colors.textSecondary, fontSize: 13 },
+    newCinemaForm: { marginTop: spacing.sm, gap: spacing.sm },
+    secondaryButton: {
+      borderWidth: 1,
+      borderColor: colors.accent,
+      borderRadius: radius.md,
+      paddingVertical: spacing.sm + 2,
+      paddingHorizontal: spacing.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    secondaryButtonPressed: { opacity: 0.7 },
+    secondaryButtonDisabled: { opacity: 0.5 },
+    secondaryButtonText: { fontWeight: '600', color: colors.accent },
+    row3: { flexDirection: 'row', gap: spacing.sm },
+    row3Item: { flex: 1 },
+    ticketTypeRow: { flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' },
+    ticketTypeChip: {
+      backgroundColor: colors.surfaceAlt,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radius.pill,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm - 2,
+    },
+    ticketTypeChipActive: { backgroundColor: colors.accent, borderColor: colors.accent },
+    ticketTypeText: { color: colors.textPrimary },
+    ticketTypeTextActive: { color: colors.accentText },
+    starsRow: { flexDirection: 'row', gap: spacing.sm },
+    star: { fontSize: 32, color: colors.rating },
+    error: { color: colors.error, marginTop: spacing.md },
+    submitButton: {
+      backgroundColor: colors.accent,
+      borderRadius: radius.md,
+      paddingVertical: spacing.md,
+      alignItems: 'center',
+      marginTop: spacing.xl,
+    },
+    submitButtonPressed: { opacity: 0.85 },
+    submitButtonText: { color: colors.accentText, fontSize: 16, fontWeight: '600' },
+  });
+}

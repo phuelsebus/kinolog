@@ -1,5 +1,5 @@
 import { Link, router } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -9,9 +9,14 @@ import {
   View,
 } from 'react-native';
 import { useAuth } from '../../src/context/AuthContext';
+import { radius, spacing } from '../../src/theme/spacing';
+import { useTheme } from '../../src/theme/ThemeContext';
+import type { ThemeColors } from '../../src/theme/colors';
 
 export default function RegisterScreen() {
   const { signUp } = useAuth();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -45,6 +50,7 @@ export default function RegisterScreen() {
       <TextInput
         style={styles.input}
         placeholder="Anzeigename (optional)"
+        placeholderTextColor={colors.textSecondary}
         autoCapitalize="words"
         value={displayName}
         onChangeText={setDisplayName}
@@ -52,6 +58,7 @@ export default function RegisterScreen() {
       <TextInput
         style={styles.input}
         placeholder="E-Mail"
+        placeholderTextColor={colors.textSecondary}
         autoCapitalize="none"
         keyboardType="email-address"
         autoComplete="email"
@@ -61,6 +68,7 @@ export default function RegisterScreen() {
       <TextInput
         style={styles.input}
         placeholder="Passwort (mind. 6 Zeichen)"
+        placeholderTextColor={colors.textSecondary}
         secureTextEntry
         autoComplete="password-new"
         value={password}
@@ -69,9 +77,13 @@ export default function RegisterScreen() {
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
-      <Pressable style={styles.button} onPress={handleSubmit} disabled={submitting}>
+      <Pressable
+        style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+        onPress={handleSubmit}
+        disabled={submitting}
+      >
         {submitting ? (
-          <ActivityIndicator color="#fff" />
+          <ActivityIndicator color={colors.accentText} />
         ) : (
           <Text style={styles.buttonText}>Registrieren</Text>
         )}
@@ -84,25 +96,30 @@ export default function RegisterScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 24, gap: 12 },
-  title: { fontSize: 24, fontWeight: '700', textAlign: 'center', marginBottom: 12 },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 16,
-  },
-  button: {
-    backgroundColor: '#111',
-    borderRadius: 8,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  error: { color: '#c0392b', textAlign: 'center' },
-  link: { textAlign: 'center', marginTop: 16, color: '#2563eb' },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, justifyContent: 'center', padding: spacing.xl, gap: spacing.md, backgroundColor: colors.background },
+    title: { fontSize: 26, fontWeight: '700', textAlign: 'center', marginBottom: spacing.sm, color: colors.textPrimary, letterSpacing: -0.5 },
+    input: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radius.md,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      fontSize: 16,
+      color: colors.textPrimary,
+    },
+    button: {
+      backgroundColor: colors.accent,
+      borderRadius: radius.md,
+      paddingVertical: spacing.md + 2,
+      alignItems: 'center',
+      marginTop: spacing.sm,
+    },
+    buttonPressed: { opacity: 0.85 },
+    buttonText: { color: colors.accentText, fontSize: 16, fontWeight: '600' },
+    error: { color: colors.error, textAlign: 'center' },
+    link: { textAlign: 'center', marginTop: spacing.lg, color: colors.accent, fontWeight: '500' },
+  });
+}
