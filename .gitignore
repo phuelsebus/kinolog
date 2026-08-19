@@ -43,3 +43,7 @@ yarn-error.*
 # Supabase
 supabase/.branches
 supabase/.temp
+
+# Dokumentation nur lokal (Ausnahme: README.md bleibt im Repo)
+*.md
+!/README.md
