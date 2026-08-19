@@ -171,7 +171,7 @@ export default function CinemaVisitDetailScreen() {
       <Text style={styles.sectionTitle}>Kino</Text>
       <Text style={styles.bodyText}>{cinema.name}</Text>
       {cinema.address || cinema.city ? (
-        <Text style={styles.metaText}>{[cinema.address, cinema.city, cinema.country].filter(Boolean).join(', ')}</Text>
+        <Text style={styles.sectionMetaText}>{[cinema.address, cinema.city, cinema.country].filter(Boolean).join(', ')}</Text>
       ) : null}
 
       <Text style={styles.sectionTitle}>Ticketinformationen</Text>
@@ -180,17 +180,17 @@ export default function CinemaVisitDetailScreen() {
         {formatTime(visit.showTime) ? ` · ${formatTime(visit.showTime)} Uhr` : ''}
       </Text>
       {visit.hall || visit.row || visit.seat ? (
-        <Text style={styles.metaText}>
+        <Text style={styles.sectionMetaText}>
           {[visit.hall ? `Saal ${visit.hall}` : null, visit.row ? `Reihe ${visit.row}` : null, visit.seat ? `Sitz ${visit.seat}` : null]
             .filter(Boolean)
             .join(' · ')}
         </Text>
       ) : null}
       {visit.ticketPrice !== null ? (
-        <Text style={styles.metaText}>{visit.ticketPrice.toFixed(2)} €</Text>
+        <Text style={styles.sectionMetaText}>{visit.ticketPrice.toFixed(2)} €</Text>
       ) : null}
       {visit.ticketType ? (
-        <Text style={styles.metaText}>{TICKET_TYPE_LABELS[visit.ticketType]}</Text>
+        <Text style={styles.sectionMetaText}>{TICKET_TYPE_LABELS[visit.ticketType]}</Text>
       ) : null}
 
       {ticketImageUrl ? (
@@ -257,6 +257,7 @@ function createStyles(colors: ThemeColors) {
     movieTitle: { fontSize: 20, fontWeight: '700', color: colors.textPrimary },
     originalTitle: { color: colors.textSecondary, fontStyle: 'italic' },
     metaText: { color: colors.textSecondary },
+    sectionMetaText: { color: colors.textSecondary, marginHorizontal: spacing.lg },
     starsRow: { flexDirection: 'row', gap: spacing.sm, paddingHorizontal: spacing.lg, marginBottom: spacing.sm },
     star: { fontSize: 28, color: colors.rating },
     trailerButton: {
