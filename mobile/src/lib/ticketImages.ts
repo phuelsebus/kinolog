@@ -1,4 +1,3 @@
-import * as Crypto from 'expo-crypto';
 import { supabase } from './supabase';
 
 const TICKET_IMAGES_BUCKET = 'ticket-images';
@@ -6,6 +5,14 @@ const TICKET_IMAGES_BUCKET = 'ticket-images';
 function fileExtensionFromUri(uri: string): string {
   const match = /\.([a-zA-Z0-9]+)(?:\?.*)?$/.exec(uri);
   return match ? match[1].toLowerCase() : 'jpg';
+}
+
+// Nur zur Erzeugung eines eindeutigen Dateinamens, keine sicherheitskritische
+// Verwendung - bewusst kein crypto.randomUUID(): das erfordert im Web einen
+// "secure context" (HTTPS oder localhost) und schlaegt sonst fehl, z.B. beim
+// Testen ueber die LAN-IP eines Rechners von einem Mobilgeraet aus (http://).
+function generateFileId(): string {
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
 /**
@@ -18,7 +25,7 @@ export async function uploadTicketImage(userId: string, uri: string): Promise<st
   const response = await fetch(uri);
   const arrayBuffer = await response.arrayBuffer();
   const extension = fileExtensionFromUri(uri);
-  const path = `${userId}/${Crypto.randomUUID()}.${extension}`;
+  const path = `${userId}/${generateFileId()}.${extension}`;
 
   const { error } = await supabase.storage
     .from(TICKET_IMAGES_BUCKET)
