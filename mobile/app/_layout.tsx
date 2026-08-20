@@ -26,6 +26,8 @@ function ThemedStack() {
         <Stack.Screen name="search-movie" options={{ title: 'Film suchen', presentation: 'modal' }} />
         <Stack.Screen name="new-visit" options={{ title: 'Kinobesuch erfassen', presentation: 'modal' }} />
         <Stack.Screen name="edit-visit" options={{ title: 'Kinobesuch bearbeiten', presentation: 'modal' }} />
+        <Stack.Screen name="legal/imprint" options={{ title: 'Impressum' }} />
+        <Stack.Screen name="legal/privacy" options={{ title: 'Datenschutz' }} />
       </Stack>
     </>
   );

@@ -9,12 +9,14 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "app.kinolog.mobile",
       "infoPlist": {
         "NSCameraUsageDescription": "KinoLog benötigt Kamerazugriff, um Kinokarten zu fotografieren.",
         "NSPhotoLibraryUsageDescription": "KinoLog benötigt Zugriff auf deine Fotos, um Kinokarten zu importieren."
       }
     },
     "android": {
+      "package": "app.kinolog.mobile",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
