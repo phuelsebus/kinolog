@@ -115,6 +115,13 @@ export default function LibraryScreen() {
       />
 
       <Pressable
+        style={({ pressed }) => [styles.scanFab, pressed && styles.scanFabPressed]}
+        onPress={() => router.push('/scan-ticket')}
+      >
+        <Ionicons name="camera" size={20} color={colors.accent} />
+      </Pressable>
+
+      <Pressable
         style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]}
         onPress={() => router.push('/search-movie')}
       >
@@ -169,5 +176,24 @@ function createStyles(colors: ThemeColors) {
     },
     fabPressed: { opacity: 0.9 },
     fabText: { color: colors.accentText, fontWeight: '600' },
+    scanFab: {
+      position: 'absolute',
+      alignItems: 'center',
+      justifyContent: 'center',
+      right: spacing.lg,
+      bottom: spacing.lg + 64,
+      width: 48,
+      height: 48,
+      borderRadius: radius.pill,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      shadowColor: '#000',
+      shadowOpacity: 0.12,
+      shadowOffset: { width: 0, height: 3 },
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    scanFabPressed: { opacity: 0.8 },
   });
 }

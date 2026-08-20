@@ -62,6 +62,10 @@ export interface VisitFormProps {
   // hier unterschiedliche Inhalte zeigen (edit-visit.tsx zusätzlich "Film ändern").
   header: ReactNode;
   initialCinema?: Cinema | null;
+  // Freitext-Vorschlag fuer die Kino-Suche (z.B. aus der Ticket-Scan-
+  // Texterkennung) - im Unterschied zu initialCinema gibt es noch kein
+  // aufgeloestes Cinema-Objekt, nur einen Namen zum Vorbefuellen der Suche.
+  initialCinemaQuery?: string;
   initialValues?: Partial<Omit<VisitFormValues, 'cinemaId'>>;
   submitLabel: string;
   submitErrorMessage: string;
@@ -74,6 +78,7 @@ export interface VisitFormProps {
 export default function VisitForm({
   header,
   initialCinema = null,
+  initialCinemaQuery,
   initialValues,
   submitLabel,
   submitErrorMessage,
@@ -83,7 +88,7 @@ export default function VisitForm({
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   // Kino: Suche + Neuanlage, da es dafuer keine externe API wie TMDB gibt.
-  const [cinemaQuery, setCinemaQuery] = useState('');
+  const [cinemaQuery, setCinemaQuery] = useState(initialCinemaQuery ?? '');
   const [cinemaResults, setCinemaResults] = useState<Cinema[]>([]);
   const [searchingCinemas, setSearchingCinemas] = useState(false);
   const [osmCityQuery, setOsmCityQuery] = useState('');
