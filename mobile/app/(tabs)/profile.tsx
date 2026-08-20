@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '../../src/context/AuthContext';
+import { profileService } from '../../src/services/ProfileService';
 import { radius, spacing } from '../../src/theme/spacing';
 import { useTheme } from '../../src/theme/ThemeContext';
 import type { ThemeColors } from '../../src/theme/colors';
@@ -12,7 +13,15 @@ export default function ProfileScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const email = session?.user.email ?? 'Unbekannt';
-  const displayName = (session?.user.user_metadata?.display_name as string | undefined) || null;
+  const [displayName, setDisplayName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!session?.user.id) return;
+    profileService
+      .getDisplayName(session.user.id)
+      .then(setDisplayName)
+      .catch(() => setDisplayName(null));
+  }, [session?.user.id]);
 
   async function handleSignOut() {
     await signOut();
