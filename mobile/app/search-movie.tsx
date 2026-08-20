@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -11,28 +11,41 @@ import {
   View,
 } from 'react-native';
 import { tmdbMovieProvider } from '../src/services/MovieProvider';
+import type { ScanHandoff } from '../src/services/TicketScanner';
 import { radius, spacing } from '../src/theme/spacing';
 import { useTheme } from '../src/theme/ThemeContext';
 import type { ThemeColors } from '../src/theme/colors';
 import type { MovieSearchResult } from '../src/types/models';
 
-// Manuelle Filmsuche UI (idee.md: "Film-Suche über TMDB"). Ersetzt den
-// urspruenglich geplanten Ticket-Foto-Flow (siehe ticket-scanner Todo) -
-// Nutzerentscheidung 2026-08-13: Hauptflow ist manuelle Filmsuche.
+function parseScanHandoff(raw: string | undefined): ScanHandoff | null {
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as ScanHandoff;
+  } catch {
+    return null;
+  }
+}
+
+// Manuelle Filmsuche UI (idee.md: "Film-Suche über TMDB"). Ist auch der
+// gemeinsame zweite Schritt des Ticket-Scan-Flows (scan-ticket.tsx): kommt
+// der "scan" Param mit erkanntem Filmtitel an, wird direkt automatisch
+// vorgesucht - der Nutzer bestaetigt/korrigiert die Auswahl aber weiterhin
+// manuell wie im normalen Flow (idee.md Abschnitt 7).
 export default function SearchMovieScreen() {
   const router = useRouter();
-  const { editVisitId } = useLocalSearchParams<{ editVisitId?: string }>();
+  const { editVisitId, scan } = useLocalSearchParams<{ editVisitId?: string; scan?: string }>();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const [query, setQuery] = useState('');
+  const scanHandoff = useMemo(() => parseScanHandoff(scan), [scan]);
+  const [query, setQuery] = useState(scanHandoff?.data.movieTitle ?? '');
   const [results, setResults] = useState<MovieSearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [selectingId, setSelectingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
 
-  async function handleSearch() {
-    const trimmed = query.trim();
+  async function handleSearch(searchQuery?: string) {
+    const trimmed = (searchQuery ?? query).trim();
     if (!trimmed) return;
 
     setSearching(true);
@@ -48,6 +61,14 @@ export default function SearchMovieScreen() {
       setSearching(false);
     }
   }
+
+  // Bei erkanntem Filmtitel aus dem Ticket-Scan einmalig automatisch suchen.
+  useEffect(() => {
+    if (scanHandoff?.data.movieTitle) {
+      handleSearch(scanHandoff.data.movieTitle);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleSelect(result: MovieSearchResult) {
     setSelectingId(result.providerId);
@@ -69,7 +90,12 @@ export default function SearchMovieScreen() {
       } else {
         router.push({
           pathname: '/new-visit',
-          params: { movieId: movie.id, movieTitle: movie.title, moviePosterUrl: movie.posterUrl ?? '' },
+          params: {
+            movieId: movie.id,
+            movieTitle: movie.title,
+            moviePosterUrl: movie.posterUrl ?? '',
+            ...(scan ? { scan } : {}),
+          },
         });
       }
     } catch {
@@ -88,13 +114,13 @@ export default function SearchMovieScreen() {
           placeholderTextColor={colors.textSecondary}
           value={query}
           onChangeText={setQuery}
-          onSubmitEditing={handleSearch}
+          onSubmitEditing={() => handleSearch()}
           returnKeyType="search"
           autoFocus
         />
         <Pressable
           style={({ pressed }) => [styles.searchButton, pressed && styles.searchButtonPressed]}
-          onPress={handleSearch}
+          onPress={() => handleSearch()}
           disabled={searching}
         >
           {searching ? (
