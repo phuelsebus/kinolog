@@ -3,9 +3,16 @@
 KinoLog ist eine mobile App zum persönlichen Archivieren von Kinobesuchen:
 **Ticket → Film → Kinobesuch → Erinnerung**.
 
-Die vollständige Produkt- und Technical Specification befindet sich in [idee.md](./idee.md)
-und ist verbindlich für die Entwicklung. Der tatsächliche Implementierungsstand ist in
-[CLAUDE.md](./CLAUDE.md) dokumentiert.
+## App installieren (Android)
+
+Aktuelle Builds gibt es auf der KinoLog-Projektseite auf Expo:
+https://expo.dev/accounts/phuelsebusxx/projects/kinolog
+
+Dort unter "Builds" den neuesten Android-Build öffnen und den QR-Code mit dem
+Gerät scannen bzw. den Link direkt öffnen – installiert die App als APK, ganz
+ohne Play Store.
+
+iOS ist aktuell nicht verfügbar (benötigt einen Apple Developer Account für TestFlight).
 
 ## Features
 
@@ -33,7 +40,7 @@ aufgerufen. API-Keys (TMDB, OpenAI) liegen nur als Supabase Secrets, nie im Clie
 
 ```
 FilmApp/
-├── idee.md                  # verbindliche Produkt-/Technical-Spec
+├── idee.md                  # ursprüngliche Produkt-/Technical-Spec
 ├── mobile/                  # Expo React Native App
 │   ├── app/                 # Routen (expo-router)
 │   │   ├── (auth)/          # Login/Registrierung
@@ -78,8 +85,3 @@ npx supabase db push          # Migrationen anwenden
 Docker/`supabase start` (lokale Instanz) ist in manchen Entwicklungsumgebungen nicht
 verfügbar – Migrationen/Functions werden dann direkt gegen das verlinkte Remote-Projekt
 gepusht/deployed.
-
-## MVP-Scope
-
-Siehe [idee.md](./idee.md) Abschnitt 2 und 10 (Definition of Done). Kein Feature-Scope
-über den dort definierten MVP hinaus ohne ausdrückliche Freigabe.
