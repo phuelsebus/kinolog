@@ -47,3 +47,6 @@ supabase/.temp
 # Dokumentation nur lokal (Ausnahme: README.md bleibt im Repo)
 *.md
 !/README.md
+
+# graphify Analyse-Output (lokal generiert, kein Projekt-Source)
+graphify-out/
