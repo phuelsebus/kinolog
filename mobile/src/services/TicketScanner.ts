@@ -1,3 +1,4 @@
+import { FunctionsHttpError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import type { TicketExtractionData } from '../types/models';
 
@@ -6,6 +7,12 @@ export interface TicketExtractionResult {
   rawText: string | null;
   confidence: number | null;
 }
+
+// Wird geworfen, wenn die ticket-scan Edge Function das monatliche
+// Nutzungslimit meldet (siehe supabase/functions/ticket-scan/index.ts) -
+// erlaubt scan-ticket.tsx, dafuer eine spezifische Meldung statt der
+// generischen Fehlermeldung anzuzeigen.
+export class TicketScanLimitError extends Error {}
 
 // Abstraktion gemaess idee.md Abschnitt 3 ("Ticket Recognition").
 // Die konkrete AI-Implementierung (OpenAI GPT-4o Vision) laeuft serverseitig
@@ -28,7 +35,15 @@ export const openAiTicketScanner: TicketScanner = {
       confidence: number | null;
     }>('ticket-scan', { body: { imagePath } });
 
-    if (error) throw error;
+    if (error) {
+      if (error instanceof FunctionsHttpError) {
+        const body = await error.context.json().catch(() => null);
+        if (body?.code === 'limit_reached') {
+          throw new TicketScanLimitError(body.error ?? 'Monatliches Scan-Limit erreicht.');
+        }
+      }
+      throw error;
+    }
     if (!data) throw new Error('Ticketanalyse lieferte keine Daten.');
     return { data: data.data, rawText: data.rawText, confidence: data.confidence };
   },

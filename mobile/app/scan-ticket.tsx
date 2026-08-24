@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { supabase } from '../src/lib/supabase';
 import { uploadTicketImage } from '../src/lib/ticketImages';
-import { openAiTicketScanner, type ScanHandoff } from '../src/services/TicketScanner';
+import { openAiTicketScanner, TicketScanLimitError, type ScanHandoff } from '../src/services/TicketScanner';
 import { radius, spacing } from '../src/theme/spacing';
 import { useTheme } from '../src/theme/ThemeContext';
 import type { ThemeColors } from '../src/theme/colors';
@@ -70,7 +70,11 @@ export default function ScanTicketScreen() {
       });
     } catch (err) {
       console.error('Ticket-Analyse fehlgeschlagen:', err);
-      setError('Ticket konnte nicht analysiert werden. Bitte versuche es erneut.');
+      if (err instanceof TicketScanLimitError) {
+        setError(err.message);
+      } else {
+        setError('Ticket konnte nicht analysiert werden. Bitte versuche es erneut.');
+      }
     } finally {
       setAnalyzing(false);
     }

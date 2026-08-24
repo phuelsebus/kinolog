@@ -5,11 +5,16 @@
 // OPENAI_API_KEY bleibt serverseitig. Das Ticketbild wird ausschliesslich als
 // privater Storage-Pfad im eigenen "Ordner" des Nutzers referenziert - der
 // Server erzeugt daraus eine kurzlebige signierte URL fuer die Vision-API.
+//
+// Monatliches Nutzungslimit (siehe ticket_scan_usage Migration): schuetzt vor
+// unbegrenzten OpenAI-Kosten bei wachsender Nutzerzahl. Serverseitig
+// durchgesetzt (nicht nur im Client), da sonst leicht umgehbar.
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "@supabase/server";
 import { extractTicketDataFromImage } from "../_shared/openai.ts";
 
 const SIGNED_URL_TTL_SECONDS = 300;
+const MONTHLY_SCAN_LIMIT = 10;
 
 export default {
   fetch: withSupabase({ auth: "user" }, async (req, ctx) => {
@@ -35,6 +40,28 @@ export default {
       return Response.json({ error: "Kein Zugriff auf dieses Bild." }, { status: 403 });
     }
 
+    const startOfMonth = new Date();
+    startOfMonth.setUTCDate(1);
+    startOfMonth.setUTCHours(0, 0, 0, 0);
+
+    const { count: usageThisMonth, error: usageError } = await ctx.supabaseAdmin
+      .from("ticket_scan_usage")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .gte("created_at", startOfMonth.toISOString());
+
+    if (usageError) {
+      console.error("ticket-scan usage check failed:", usageError);
+    } else if ((usageThisMonth ?? 0) >= MONTHLY_SCAN_LIMIT) {
+      return Response.json(
+        {
+          code: "limit_reached",
+          error: `Monatliches Scan-Limit erreicht (${MONTHLY_SCAN_LIMIT}/Monat). Bitte trage den Kinobesuch manuell ein oder versuche es nächsten Monat erneut.`,
+        },
+        { status: 429 },
+      );
+    }
+
     try {
       const { data: signed, error: signError } = await ctx.supabaseAdmin.storage
         .from("ticket-images")
@@ -43,6 +70,10 @@ export default {
       if (signError || !signed) {
         throw signError ?? new Error("Signed URL konnte nicht erstellt werden.");
       }
+
+      // Vor dem eigentlichen OpenAI-Aufruf zaehlen, da ab hier Kosten anfallen -
+      // unabhaengig davon, ob die Extraktion danach inhaltlich gelingt.
+      await ctx.supabaseAdmin.from("ticket_scan_usage").insert({ user_id: userId });
 
       const extraction = await extractTicketDataFromImage(signed.signedUrl);
 
