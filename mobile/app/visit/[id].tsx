@@ -36,7 +36,7 @@ const TICKET_TYPE_LABELS: Record<TicketType, string> = {
 };
 
 // Detailseite eines Kinobesuchs (idee.md Abschnitt 8): vollstaendige
-// Filmdaten, Kinodaten, Ticketinformationen, Originalticket, Trailer,
+// Filmdaten, Kinodaten, Ticketinformationen, Ticketfoto, Trailer,
 // Bewertung und persoenliche Notiz.
 export default function CinemaVisitDetailScreen() {
   const router = useRouter();
@@ -195,7 +195,7 @@ export default function CinemaVisitDetailScreen() {
 
       {ticketImageUrl ? (
         <>
-          <Text style={styles.sectionTitle}>Originalticket</Text>
+          <Text style={styles.sectionTitle}>Ticketfoto</Text>
           <Image source={{ uri: ticketImageUrl }} style={styles.ticketImage} resizeMode="contain" />
         </>
       ) : null}

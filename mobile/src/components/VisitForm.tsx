@@ -40,7 +40,6 @@ function formatDateInput(text: string): string {
 const TICKET_TYPE_OPTIONS: { value: TicketType; label: string }[] = [
   { value: 'original', label: 'Originalticket' },
   { value: 'online', label: 'Online-Ticket' },
-  { value: 'unknown', label: 'Unbekannt' },
 ];
 
 export interface VisitFormValues {
