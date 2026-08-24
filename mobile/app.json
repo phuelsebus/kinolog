@@ -25,8 +25,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO"
+        "android.permission.CAMERA"
       ]
     },
     "web": {
@@ -39,13 +38,16 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "KinoLog benötigt Kamerazugriff, um Kinokarten zu fotografieren."
+          "cameraPermission": "KinoLog benötigt Kamerazugriff, um Kinokarten zu fotografieren.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "KinoLog benötigt Zugriff auf deine Fotos, um Kinokarten zu importieren."
+          "photosPermission": "KinoLog benötigt Zugriff auf deine Fotos, um Kinokarten zu importieren.",
+          "microphonePermission": false
         }
       ],
       "expo-font"

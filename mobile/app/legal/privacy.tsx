@@ -67,6 +67,14 @@ export default function PrivacyScreen() {
         DSGVO) sowie ein Beschwerderecht bei einer Datenschutz-Aufsichtsbehörde.
         Kontaktiere uns dafür unter phuelsebusxx@gmail.com.
       </Text>
+
+      <Text style={styles.sectionTitle}>8. Konto löschen</Text>
+      <Text style={styles.bodyText}>
+        Du kannst dein Konto jederzeit direkt in der App unter „Profil“ →
+        „Konto löschen“ unwiderruflich löschen. Alternativ (z.B. ohne
+        App-Zugriff):{"\n"}
+        https://htnuvcdolvnnrbxmrryf.supabase.co/functions/v1/account-deletion
+      </Text>
     </ScrollView>
   );
 }

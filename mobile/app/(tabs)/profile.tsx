@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '../../src/context/AuthContext';
 import { profileService } from '../../src/services/ProfileService';
 import { radius, spacing } from '../../src/theme/spacing';
@@ -9,11 +9,14 @@ import { useTheme } from '../../src/theme/ThemeContext';
 import type { ThemeColors } from '../../src/theme/colors';
 
 export default function ProfileScreen() {
-  const { session, signOut } = useAuth();
+  const { session, signOut, deleteAccount } = useAuth();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const email = session?.user.email ?? 'Unbekannt';
   const [displayName, setDisplayName] = useState<string | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!session?.user.id) return;
@@ -25,6 +28,19 @@ export default function ProfileScreen() {
 
   async function handleSignOut() {
     await signOut();
+    router.replace('/(auth)/login');
+  }
+
+  async function handleDeleteAccount() {
+    setDeletingAccount(true);
+    setDeleteError(null);
+    const { error } = await deleteAccount();
+    if (error) {
+      setDeleteError('Konto konnte nicht gelöscht werden. Bitte versuche es erneut.');
+      setDeletingAccount(false);
+      setConfirmingDelete(false);
+      return;
+    }
     router.replace('/(auth)/login');
   }
 
@@ -66,6 +82,35 @@ export default function ProfileScreen() {
         <Ionicons name="log-out-outline" size={18} color={colors.error} />
         <Text style={styles.signOutText}>Abmelden</Text>
       </Pressable>
+
+      <View style={styles.dangerZone}>
+        {deleteError ? <Text style={styles.deleteErrorText}>{deleteError}</Text> : null}
+        {confirmingDelete ? (
+          <View style={styles.confirmDeleteRow}>
+            <Text style={styles.confirmDeleteText}>
+              Konto und alle Kinobesuche unwiderruflich löschen?
+            </Text>
+            <Pressable
+              style={({ pressed }) => [styles.deleteConfirmButton, pressed && styles.deleteConfirmButtonPressed]}
+              onPress={handleDeleteAccount}
+              disabled={deletingAccount}
+            >
+              {deletingAccount ? (
+                <ActivityIndicator color={colors.accentText} />
+              ) : (
+                <Text style={styles.deleteConfirmButtonText}>Ja, endgültig löschen</Text>
+              )}
+            </Pressable>
+            <Pressable onPress={() => setConfirmingDelete(false)} disabled={deletingAccount}>
+              <Text style={styles.cancelDeleteText}>Abbrechen</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <Pressable style={styles.deleteAccountButton} onPress={() => setConfirmingDelete(true)}>
+            <Text style={styles.deleteAccountText}>Konto löschen</Text>
+          </Pressable>
+        )}
+      </View>
     </View>
   );
 }
@@ -125,5 +170,22 @@ function createStyles(colors: ThemeColors) {
     },
     signOutButtonPressed: { opacity: 0.75 },
     signOutText: { color: colors.error, fontWeight: '600' },
+    dangerZone: { alignItems: 'center', gap: spacing.sm },
+    deleteAccountButton: { paddingVertical: spacing.xs },
+    deleteAccountText: { color: colors.textSecondary, fontSize: 13, textDecorationLine: 'underline' },
+    deleteErrorText: { color: colors.error, fontSize: 13, textAlign: 'center' },
+    confirmDeleteRow: { alignItems: 'center', gap: spacing.sm },
+    confirmDeleteText: { color: colors.error, fontSize: 13, textAlign: 'center' },
+    deleteConfirmButton: {
+      backgroundColor: colors.error,
+      borderRadius: radius.md,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.lg,
+      minWidth: 160,
+      alignItems: 'center',
+    },
+    deleteConfirmButtonPressed: { opacity: 0.85 },
+    deleteConfirmButtonText: { color: colors.accentText, fontWeight: '600' },
+    cancelDeleteText: { color: colors.textSecondary },
   });
 }

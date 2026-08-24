@@ -12,6 +12,7 @@ interface AuthContextValue {
     displayName: string
   ) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
+  deleteAccount: () => Promise<{ error: string | null }>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -56,6 +57,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       async signOut() {
         await supabase.auth.signOut();
+      },
+      async deleteAccount() {
+        const { error } = await supabase.functions.invoke('delete-account', { method: 'POST' });
+        if (error) return { error: error.message };
+        await supabase.auth.signOut();
+        return { error: null };
       },
     }),
     [session, loading]
