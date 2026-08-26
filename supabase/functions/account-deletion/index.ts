@@ -16,7 +16,7 @@ const html = `<!doctype html>
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Konto löschen – KinoLog</title>
+<title>Konto löschen – KinoLiebe</title>
 <style>
   body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 560px; margin: 3rem auto; padding: 0 1.25rem; line-height: 1.6; color: #1a1a1a; }
   h1 { font-size: 1.4rem; }
@@ -26,10 +26,10 @@ const html = `<!doctype html>
 </style>
 </head>
 <body>
-<h1>Konto löschen – KinoLog</h1>
+<h1>Konto löschen – KinoLiebe</h1>
 
 <h2>Option 1: In der App</h2>
-<p>Öffne KinoLog, gehe zu <strong>Profil</strong> und tippe unten auf <strong>„Konto löschen“</strong>.
+<p>Öffne KinoLiebe, gehe zu <strong>Profil</strong> und tippe unten auf <strong>„Konto löschen“</strong>.
 Dein Konto sowie alle gespeicherten Kinobesuche, Bewertungen und Ticketbilder werden dabei
 sofort unwiderruflich gelöscht.</p>
 

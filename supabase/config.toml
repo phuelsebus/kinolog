@@ -473,3 +473,15 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/account-deletion/deno.json"
 entrypoint = "./functions/account-deletion/index.ts"
+
+[functions.legal-privacy]
+enabled = true
+verify_jwt = false
+import_map = "./functions/legal-privacy/deno.json"
+entrypoint = "./functions/legal-privacy/index.ts"
+
+[functions.legal-imprint]
+enabled = true
+verify_jwt = false
+import_map = "./functions/legal-imprint/deno.json"
+entrypoint = "./functions/legal-imprint/index.ts"

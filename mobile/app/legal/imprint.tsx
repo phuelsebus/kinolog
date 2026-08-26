@@ -28,7 +28,7 @@ export default function ImprintScreen() {
 
       <Text style={styles.sectionTitle}>Hinweis</Text>
       <Text style={styles.bodyText}>
-        KinoLog ist ein privates, nicht-kommerzielles Hobby-Projekt zum
+        KinoLiebe ist ein privates, nicht-kommerzielles Hobby-Projekt zum
         persönlichen Archivieren von Kinobesuchen.
       </Text>
     </ScrollView>
