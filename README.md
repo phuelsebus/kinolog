@@ -1,11 +1,12 @@
-# KinoLog
+# KinoLiebe
 
-KinoLog ist eine mobile App zum persönlichen Archivieren von Kinobesuchen:
+KinoLiebe ist eine mobile App zum persönlichen Archivieren von Kinobesuchen:
 **Ticket → Film → Kinobesuch → Erinnerung**.
 
 ## App installieren (Android)
 
-Aktuelle Builds gibt es auf der KinoLog-Projektseite auf Expo:
+Aktuelle Builds gibt es auf der KinoLiebe-Projektseite auf Expo (technischer
+Projekt-Slug bleibt intern "kinolog", siehe CLAUDE.md):
 https://expo.dev/accounts/phuelsebusxx/projects/kinolog
 
 Dort unter "Builds" den neuesten Android-Build öffnen und den QR-Code mit dem

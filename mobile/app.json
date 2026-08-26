@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "kinolog",
+    "name": "KinoLiebe",
     "slug": "kinolog",
     "scheme": "kinolog",
     "version": "1.0.0",
@@ -11,16 +11,15 @@
       "supportsTablet": true,
       "bundleIdentifier": "app.kinolog.mobile",
       "infoPlist": {
-        "NSCameraUsageDescription": "KinoLog benötigt Kamerazugriff, um Kinokarten zu fotografieren.",
-        "NSPhotoLibraryUsageDescription": "KinoLog benötigt Zugriff auf deine Fotos, um Kinokarten zu importieren."
+        "NSCameraUsageDescription": "KinoLiebe benötigt Kamerazugriff, um Kinokarten zu fotografieren.",
+        "NSPhotoLibraryUsageDescription": "KinoLiebe benötigt Zugriff auf deine Fotos, um Kinokarten zu importieren."
       }
     },
     "android": {
       "package": "app.kinolog.mobile",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#17150F",
         "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
@@ -38,7 +37,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "KinoLog benötigt Kamerazugriff, um Kinokarten zu fotografieren.",
+          "cameraPermission": "KinoLiebe benötigt Kamerazugriff, um Kinokarten zu fotografieren.",
           "microphonePermission": false,
           "recordAudioAndroid": false
         }
@@ -46,7 +45,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "KinoLog benötigt Zugriff auf deine Fotos, um Kinokarten zu importieren.",
+          "photosPermission": "KinoLiebe benötigt Zugriff auf deine Fotos, um Kinokarten zu importieren.",
           "microphonePermission": false
         }
       ],

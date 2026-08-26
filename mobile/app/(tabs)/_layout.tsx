@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect, Tabs } from 'expo-router';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Image, View } from 'react-native';
 import { useAuth } from '../../src/context/AuthContext';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { ThemeToggleButton } from '../../src/theme/ThemeToggleButton';
@@ -38,6 +38,12 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: 'Bibliothek',
+          headerLeft: () => (
+            <Image
+              source={require('../../assets/android-icon-foreground.png')}
+              style={{ width: 40, height: 40, marginLeft: 10 }}
+            />
+          ),
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons name={focused ? 'film' : 'film-outline'} size={size} color={color} />
           ),
