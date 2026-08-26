@@ -3,13 +3,15 @@
 // seit 2026-04-15 verbindlich fuer Apps mit Kontoerstellung): der Nutzer kann
 // sein Konto samt aller Daten selbst loeschen.
 //
-// Loescht zunaechst die eigenen Ticketbilder aus dem privaten "ticket-images"
-// Storage-Bucket (werden durch keine DB-Fremdschluessel-Kaskade erfasst), dann
-// den auth.users-Eintrag - das kaskadiert per "on delete cascade" automatisch
-// zu profiles, cinema_visits und ticket_extractions (siehe
-// supabase/migrations/20260813000000_init_schema.sql).
+// Loescht zunaechst die eigenen Dateien aus den privaten Storage-Buckets
+// ("ticket-images", "avatars" - werden durch keine DB-Fremdschluessel-
+// Kaskade erfasst), dann den auth.users-Eintrag - das kaskadiert per
+// "on delete cascade" automatisch zu profiles, cinema_visits und
+// ticket_extractions (siehe supabase/migrations/20260813000000_init_schema.sql).
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "@supabase/server";
+
+const USER_STORAGE_BUCKETS = ["ticket-images", "avatars"];
 
 export default {
   fetch: withSupabase({ auth: "user" }, async (req, ctx) => {
@@ -23,14 +25,13 @@ export default {
     }
 
     try {
-      const { data: files } = await ctx.supabaseAdmin.storage
-        .from("ticket-images")
-        .list(userId);
-
-      if (files && files.length > 0) {
-        await ctx.supabaseAdmin.storage
-          .from("ticket-images")
-          .remove(files.map((file) => `${userId}/${file.name}`));
+      for (const bucket of USER_STORAGE_BUCKETS) {
+        const { data: files } = await ctx.supabaseAdmin.storage.from(bucket).list(userId);
+        if (files && files.length > 0) {
+          await ctx.supabaseAdmin.storage
+            .from(bucket)
+            .remove(files.map((file) => `${userId}/${file.name}`));
+        }
       }
 
       const { error } = await ctx.supabaseAdmin.auth.admin.deleteUser(userId);

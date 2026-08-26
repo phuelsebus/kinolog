@@ -30,7 +30,7 @@ E-Mail: <a href="mailto:phuelsebusxx@gmail.com">phuelsebusxx@gmail.com</a><br />
 
 <h2>2. Welche Daten wir verarbeiten</h2>
 <p>
-• Account: E-Mail-Adresse, Anzeigename, Passwort (verschlüsselt gespeichert)<br />
+• Account: E-Mail-Adresse, Anzeigename, Profilbild (optional), Passwort (verschlüsselt gespeichert)<br />
 • Kinobesuche: Filmdaten, Kino, Datum/Uhrzeit, Saal/Reihe/Sitz, Preis, Bewertung, Notizen<br />
 • Ticketfotos: von dir freiwillig hochgeladene Bilder deiner Kinokarten<br />
 • Kino-Standortdaten: Koordinaten von Kinos (keine Standort-/Bewegungsdaten von dir selbst)

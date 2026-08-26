@@ -12,7 +12,7 @@
       "bundleIdentifier": "app.kinolog.mobile",
       "infoPlist": {
         "NSCameraUsageDescription": "KinoLiebe benötigt Kamerazugriff, um Kinokarten zu fotografieren.",
-        "NSPhotoLibraryUsageDescription": "KinoLiebe benötigt Zugriff auf deine Fotos, um Kinokarten zu importieren."
+        "NSPhotoLibraryUsageDescription": "KinoLiebe benötigt Zugriff auf deine Fotos, um Kinokarten oder ein Profilbild zu importieren."
       }
     },
     "android": {
@@ -45,7 +45,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "KinoLiebe benötigt Zugriff auf deine Fotos, um Kinokarten zu importieren.",
+          "photosPermission": "KinoLiebe benötigt Zugriff auf deine Fotos, um Kinokarten oder ein Profilbild zu importieren.",
           "microphonePermission": false
         }
       ],

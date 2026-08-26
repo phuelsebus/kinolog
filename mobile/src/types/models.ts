@@ -5,6 +5,7 @@ export interface User {
   id: string;
   email: string;
   displayName: string | null;
+  avatarUrl: string | null; // privater Storage-Pfad, siehe lib/avatarImages.ts
   createdAt: string;
 }
 

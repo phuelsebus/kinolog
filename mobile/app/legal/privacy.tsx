@@ -23,11 +23,11 @@ export default function PrivacyScreen() {
 
       <Text style={styles.sectionTitle}>2. Welche Daten wir verarbeiten</Text>
       <Text style={styles.bodyText}>
-        • Account: E-Mail-Adresse, Anzeigename, Passwort (verschlüsselt
-        gespeichert){"\n"}• Kinobesuche: Filmdaten, Kino, Datum/Uhrzeit,
-        Saal/Reihe/Sitz, Preis, Bewertung, Notizen{"\n"}• Ticketfotos: von dir
-        freiwillig hochgeladene Bilder deiner Kinokarten{"\n"}•
-        Kino-Standortdaten: Koordinaten von Kinos (keine
+        • Account: E-Mail-Adresse, Anzeigename, Profilbild (optional),
+        Passwort (verschlüsselt gespeichert){"\n"}• Kinobesuche: Filmdaten,
+        Kino, Datum/Uhrzeit, Saal/Reihe/Sitz, Preis, Bewertung, Notizen{"\n"}
+        • Ticketfotos: von dir freiwillig hochgeladene Bilder deiner
+        Kinokarten{"\n"}• Kino-Standortdaten: Koordinaten von Kinos (keine
         Standort-/Bewegungsdaten von dir selbst)
       </Text>
 
