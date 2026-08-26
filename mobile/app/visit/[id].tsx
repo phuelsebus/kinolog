@@ -82,7 +82,7 @@ export default function CinemaVisitDetailScreen() {
     if (!visit) return;
     setDeleting(true);
     try {
-      await cinemaVisitService.deleteVisit(visit.id);
+      await cinemaVisitService.deleteVisit(visit.id, visit.ticketImageUrl);
       router.replace('/(tabs)');
     } catch {
       setError('Kinobesuch konnte nicht gelöscht werden.');

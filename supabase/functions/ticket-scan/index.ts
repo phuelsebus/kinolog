@@ -77,6 +77,20 @@ export default {
 
       const extraction = await extractTicketDataFromImage(signed.signedUrl);
 
+      // Bei Online-Tickets fuer mehrere Personen (z.B. wenn man fuer Freunde
+      // mitbezahlt hat) stehen Saal/Reihe/Sitz auf dem Ticket oft mehrfach
+      // bzw. zusammengefasst (z.B. "3, 3" statt "3"). Ein einzelner Platz hat
+      // hier realistisch nie mehr als 2 Zeichen (z.B. "12", "AA") - laenger
+      // deutet auf so einen Mehrfach-Wert hin, den lassen wir lieber weg und
+      // der Nutzer traegt die richtige Position manuell ein.
+      const MAX_SEAT_FIELD_LENGTH = 2;
+      for (const field of ["hall", "row", "seat"] as const) {
+        const value = extraction[field];
+        if (value && value.length > MAX_SEAT_FIELD_LENGTH) {
+          extraction[field] = null;
+        }
+      }
+
       const { confidence, rawText, ...fields } = extraction;
       // Nur tatsaechlich erkannte (nicht-null) Felder zurueckgeben - alle
       // Felder sind laut idee.md Abschnitt 4 optional.

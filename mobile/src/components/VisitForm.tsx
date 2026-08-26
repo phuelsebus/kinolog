@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -35,6 +37,13 @@ function germanToIso(de: string): string {
 function formatDateInput(text: string): string {
   const digits = text.replace(/\D/g, '').slice(0, 8);
   return [digits.slice(0, 2), digits.slice(2, 4), digits.slice(4, 8)].filter(Boolean).join('.');
+}
+
+// Gleiches Prinzip wie formatDateInput, nur fuer HH:MM statt TT.MM.JJJJ -
+// aus getippten "1900" wird "19:00".
+function formatTimeInput(text: string): string {
+  const digits = text.replace(/\D/g, '').slice(0, 4);
+  return [digits.slice(0, 2), digits.slice(2, 4)].filter(Boolean).join(':');
 }
 
 const TICKET_TYPE_OPTIONS: { value: TicketType; label: string }[] = [
@@ -250,7 +259,12 @@ export default function VisitForm({
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+    >
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       {header}
 
       <Text style={styles.sectionLabel}>Kino *</Text>
@@ -393,22 +407,23 @@ export default function VisitForm({
         style={styles.input}
         placeholder="z.B. 19:00"
         placeholderTextColor={colors.textSecondary}
+        keyboardType="number-pad"
         value={showTime}
-        onChangeText={setShowTime}
+        onChangeText={(text) => setShowTime(formatTimeInput(text))}
       />
 
       <View style={styles.row3}>
         <View style={styles.row3Item}>
           <Text style={styles.sectionLabel}>Saal</Text>
-          <TextInput style={styles.input} value={hall} onChangeText={setHall} />
+          <TextInput style={styles.input} value={hall} onChangeText={setHall} maxLength={2} />
         </View>
         <View style={styles.row3Item}>
           <Text style={styles.sectionLabel}>Reihe</Text>
-          <TextInput style={styles.input} value={row} onChangeText={setRow} />
+          <TextInput style={styles.input} value={row} onChangeText={setRow} maxLength={2} />
         </View>
         <View style={styles.row3Item}>
           <Text style={styles.sectionLabel}>Sitz</Text>
-          <TextInput style={styles.input} value={seat} onChangeText={setSeat} />
+          <TextInput style={styles.input} value={seat} onChangeText={setSeat} maxLength={2} />
         </View>
       </View>
 
@@ -468,12 +483,14 @@ export default function VisitForm({
           <Text style={styles.submitButtonText}>{submitLabel}</Text>
         )}
       </Pressable>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
+    flex: { flex: 1 },
     container: { padding: spacing.lg, gap: spacing.xs, paddingBottom: spacing.xxl + spacing.lg },
     sectionLabel: { fontWeight: '600', marginTop: spacing.lg, marginBottom: spacing.sm, color: colors.textPrimary },
     input: {

@@ -27,7 +27,7 @@ export interface CreateCinemaVisitInput {
 export interface CinemaVisitService {
   createVisit(input: CreateCinemaVisitInput): Promise<CinemaVisit>;
   updateVisit(id: string, input: CreateCinemaVisitInput): Promise<CinemaVisit>;
-  deleteVisit(id: string): Promise<void>;
+  deleteVisit(id: string, ticketImageUrl?: string | null): Promise<void>;
   listVisits(): Promise<CinemaVisitWithDetails[]>;
   getVisit(id: string): Promise<CinemaVisitWithDetails | null>;
   updateRating(id: string, rating: number): Promise<CinemaVisit>;
@@ -97,7 +97,17 @@ export const cinemaVisitService: CinemaVisitService = {
     return mapCinemaVisitRow(data as CinemaVisitRow);
   },
 
-  async deleteVisit(id: string): Promise<void> {
+  async deleteVisit(id: string, ticketImageUrl?: string | null): Promise<void> {
+    if (ticketImageUrl) {
+      // Best-effort: das Ticketfoto haengt an keinem DB-Fremdschluessel, muss
+      // also separat entfernt werden, sonst bleibt es verwaist im Storage
+      // liegen. Ein Fehler hier darf das eigentliche Loeschen nicht blockieren.
+      const { error: storageError } = await supabase.storage
+        .from('ticket-images')
+        .remove([ticketImageUrl]);
+      if (storageError) console.error('Ticketfoto konnte nicht geloescht werden:', storageError);
+    }
+
     const { error } = await supabase.from('cinema_visits').delete().eq('id', id);
     if (error) throw error;
   },
