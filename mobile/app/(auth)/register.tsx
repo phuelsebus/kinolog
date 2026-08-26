@@ -1,8 +1,11 @@
 import { Link, router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -22,6 +25,13 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const scrollViewRef = useRef<ScrollView>(null);
+  // Button sitzt unten - ohne manuelles Scrollen faehrt die Tastatur sonst
+  // einfach darueber (gleiches Muster wie im Kinobesuch-Formular/Login).
+  function scrollToEnd() {
+    setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 150);
+  }
 
   async function handleSubmit() {
     if (!email.trim() || !password) {
@@ -44,7 +54,16 @@ export default function RegisterScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+    >
+    <ScrollView
+      ref={scrollViewRef}
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps="handled"
+    >
       <Text style={styles.title}>Account erstellen</Text>
 
       <TextInput
@@ -54,6 +73,7 @@ export default function RegisterScreen() {
         autoCapitalize="words"
         value={displayName}
         onChangeText={setDisplayName}
+        onFocus={scrollToEnd}
       />
       <TextInput
         style={styles.input}
@@ -64,6 +84,7 @@ export default function RegisterScreen() {
         autoComplete="email"
         value={email}
         onChangeText={setEmail}
+        onFocus={scrollToEnd}
       />
       <TextInput
         style={styles.input}
@@ -73,6 +94,7 @@ export default function RegisterScreen() {
         autoComplete="password-new"
         value={password}
         onChangeText={setPassword}
+        onFocus={scrollToEnd}
       />
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -92,13 +114,21 @@ export default function RegisterScreen() {
       <Link href="/(auth)/login" style={styles.link}>
         Schon einen Account? Jetzt anmelden
       </Link>
-    </View>
+    </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    container: { flex: 1, justifyContent: 'center', padding: spacing.xl, gap: spacing.md, backgroundColor: colors.background },
+    flex: { flex: 1, backgroundColor: colors.background },
+    container: {
+      flexGrow: 1,
+      justifyContent: 'center',
+      padding: spacing.xl,
+      paddingBottom: spacing.xxl * 3,
+      gap: spacing.md,
+    },
     title: { fontSize: 26, fontWeight: '700', textAlign: 'center', marginBottom: spacing.sm, color: colors.textPrimary, letterSpacing: -0.5 },
     input: {
       backgroundColor: colors.surface,

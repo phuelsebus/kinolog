@@ -4,8 +4,10 @@ import {
   ActivityIndicator,
   Animated,
   Image,
+  KeyboardAvoidingView,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -32,6 +34,14 @@ export default function LoginScreen() {
 
   const logoOpacity = useRef(new Animated.Value(0)).current;
   const logoScale = useRef(new Animated.Value(0.4)).current;
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  // Passwort-Feld/Anmelden-Button sitzen unten - ohne manuelles Scrollen
+  // faehrt die Tastatur sonst einfach darueber (gleiches Muster wie im
+  // Kinobesuch-Formular).
+  function scrollToEnd() {
+    setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 150);
+  }
 
   // Kino-Projektor-Intro: Logo + Titel flackern kurz auf (wie eine
   // Projektorlampe, die hochfaehrt), bevor sie mit sanftem Ueberschwung einrasten.
@@ -65,7 +75,16 @@ export default function LoginScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+    >
+    <ScrollView
+      ref={scrollViewRef}
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps="handled"
+    >
       <View style={styles.header}>
         <Animated.View
           style={[styles.titleRow, { opacity: logoOpacity, transform: [{ scale: logoScale }] }]}
@@ -90,6 +109,7 @@ export default function LoginScreen() {
           autoComplete="email"
           value={email}
           onChangeText={setEmail}
+          onFocus={scrollToEnd}
         />
         <TextInput
           style={[styles.input, webNoOutline]}
@@ -99,6 +119,7 @@ export default function LoginScreen() {
           autoComplete="password"
           value={password}
           onChangeText={setPassword}
+          onFocus={scrollToEnd}
         />
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -119,13 +140,20 @@ export default function LoginScreen() {
       <Link href="/(auth)/register" style={styles.link}>
         Noch keinen Account? Jetzt registrieren
       </Link>
-    </View>
+    </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    container: { flex: 1, justifyContent: 'center', padding: spacing.xl, backgroundColor: colors.background },
+    flex: { flex: 1, backgroundColor: colors.background },
+    container: {
+      flexGrow: 1,
+      justifyContent: 'center',
+      padding: spacing.xl,
+      paddingBottom: spacing.xxl * 3,
+    },
     header: { alignItems: 'center', marginBottom: spacing.xxl },
     titleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
     logo: { width: 46, height: 46 },

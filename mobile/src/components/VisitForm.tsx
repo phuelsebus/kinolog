@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -97,6 +97,8 @@ export default function VisitForm({
 
   // Kino: Suche + Neuanlage, da es dafuer keine externe API wie TMDB gibt.
   const [cinemaQuery, setCinemaQuery] = useState(initialCinemaQuery ?? '');
+  const scrollViewRef = useRef<ScrollView>(null);
+
   const [cinemaResults, setCinemaResults] = useState<Cinema[]>([]);
   const [searchingCinemas, setSearchingCinemas] = useState(false);
   const [osmCityQuery, setOsmCityQuery] = useState('');
@@ -264,7 +266,7 @@ export default function VisitForm({
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+      <ScrollView ref={scrollViewRef} contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       {header}
 
       <Text style={styles.sectionLabel}>Kino *</Text>
@@ -468,6 +470,13 @@ export default function VisitForm({
         numberOfLines={3}
         value={comment}
         onChangeText={setComment}
+        onFocus={() => {
+          // Notiz sitzt ganz unten im Formular - ohne manuelles Scrollen
+          // faehrt die Tastatur einfach darueber, statt dass die Ansicht
+          // automatisch mitscrollt (bekanntes ScrollView-Verhalten).
+          // Verzoegerung, damit die Tastatur-Animation schon begonnen hat.
+          setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 150);
+        }}
       />
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -491,7 +500,7 @@ export default function VisitForm({
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     flex: { flex: 1 },
-    container: { padding: spacing.lg, gap: spacing.xs, paddingBottom: spacing.xxl + spacing.lg },
+    container: { padding: spacing.lg, gap: spacing.xs, paddingBottom: spacing.xxl * 4 },
     sectionLabel: { fontWeight: '600', marginTop: spacing.lg, marginBottom: spacing.sm, color: colors.textPrimary },
     input: {
       backgroundColor: colors.surface,
