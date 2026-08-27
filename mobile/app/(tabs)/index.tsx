@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   FlatList,
   Image,
+  Modal,
   Pressable,
   RefreshControl,
   StyleSheet,
@@ -32,6 +33,63 @@ function StarRating({ rating, color }: { rating: number | null; color: string })
   );
 }
 
+type SortMode = 'visited' | 'release' | 'added' | 'alphabetical';
+type SortDirection = 'asc' | 'desc';
+
+interface SortState {
+  mode: SortMode;
+  direction: SortDirection;
+}
+
+// Sinnvolle Standardrichtung je Kriterium beim Wechsel: bei Daten zuerst das
+// Neueste, bei alphabetisch A-Z.
+const DEFAULT_DIRECTION: Record<SortMode, SortDirection> = {
+  visited: 'desc',
+  release: 'desc',
+  added: 'desc',
+  alphabetical: 'asc',
+};
+
+const SORT_OPTIONS: { value: SortMode; label: string }[] = [
+  { value: 'visited', label: 'Kinobesuch' },
+  { value: 'release', label: 'Erscheinungsdatum' },
+  { value: 'added', label: 'Hinzugefügt' },
+  { value: 'alphabetical', label: 'Alphabetisch' },
+];
+
+// Vergleicht zwei ISO-Datumsstrings (YYYY-MM-DD / Timestamps) aufsteigend -
+// "null"/leer landet dabei immer am Ende, unabhaengig von der Richtung (wird
+// erst nach diesem Nullcheck angewendet).
+function compareDates(a: string | null, b: string | null, direction: SortDirection): number {
+  if (!a && !b) return 0;
+  if (!a) return 1;
+  if (!b) return -1;
+  const cmp = a.localeCompare(b);
+  return direction === 'asc' ? cmp : -cmp;
+}
+
+function sortVisits(visits: CinemaVisitWithDetails[], sort: SortState): CinemaVisitWithDetails[] {
+  const sorted = [...visits];
+  const { mode, direction } = sort;
+  switch (mode) {
+    case 'release':
+      return sorted.sort((a, b) => compareDates(a.movie.releaseDate, b.movie.releaseDate, direction));
+    case 'added':
+      return sorted.sort((a, b) => compareDates(a.createdAt, b.createdAt, direction));
+    case 'alphabetical':
+      return sorted.sort((a, b) => {
+        const cmp = a.movie.title.localeCompare(b.movie.title, 'de');
+        return direction === 'asc' ? cmp : -cmp;
+      });
+    case 'visited':
+    default:
+      return sorted.sort(
+        (a, b) =>
+          compareDates(a.watchedAt, b.watchedAt, direction) || compareDates(a.showTime, b.showTime, direction)
+      );
+  }
+}
+
 // Bibliothek (idee.md Abschnitt 8): chronologische Liste aller Kinobesuche
 // mit Poster, Filmtitel, Datum, Kino, Bewertung.
 export default function LibraryScreen() {
@@ -41,6 +99,18 @@ export default function LibraryScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sort, setSort] = useState<SortState>({ mode: 'visited', direction: 'desc' });
+  const [sortMenuOpen, setSortMenuOpen] = useState(false);
+
+  const sortedVisits = useMemo(() => sortVisits(visits, sort), [visits, sort]);
+
+  function handleSelectSort(mode: SortMode) {
+    setSort((current) =>
+      current.mode === mode
+        ? { mode, direction: current.direction === 'asc' ? 'desc' : 'asc' }
+        : { mode, direction: DEFAULT_DIRECTION[mode] }
+    );
+  }
 
   const loadVisits = useCallback(async (isRefresh: boolean) => {
     if (isRefresh) setRefreshing(true);
@@ -77,8 +147,61 @@ export default function LibraryScreen() {
     <View style={styles.container}>
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
+      {visits.length > 0 ? (
+        <View style={styles.sortRow}>
+          <Pressable style={styles.sortButton} onPress={() => setSortMenuOpen(true)}>
+            <Ionicons name="swap-vertical" size={16} color={colors.textPrimary} />
+            <Text style={styles.sortButtonText}>
+              {SORT_OPTIONS.find((option) => option.value === sort.mode)?.label}
+            </Text>
+            <Ionicons
+              name={sort.direction === 'asc' ? 'arrow-up' : 'arrow-down'}
+              size={14}
+              color={colors.textSecondary}
+            />
+          </Pressable>
+        </View>
+      ) : null}
+
+      <Modal
+        visible={sortMenuOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSortMenuOpen(false)}
+      >
+        <Pressable style={styles.modalBackdrop} onPress={() => setSortMenuOpen(false)}>
+          <Pressable style={styles.sortMenu} onPress={() => {}}>
+            <Text style={styles.sortMenuTitle}>Sortieren nach</Text>
+            {SORT_OPTIONS.map((option) => {
+              const isActive = sort.mode === option.value;
+              return (
+                <Pressable
+                  key={option.value}
+                  style={({ pressed }) => [styles.sortMenuRow, pressed && styles.sortMenuRowPressed]}
+                  onPress={() => handleSelectSort(option.value)}
+                >
+                  <Text style={[styles.sortMenuRowText, isActive && styles.sortMenuRowTextActive]}>
+                    {option.label}
+                  </Text>
+                  {isActive ? (
+                    <Ionicons
+                      name={sort.direction === 'asc' ? 'arrow-up' : 'arrow-down'}
+                      size={18}
+                      color={colors.accent}
+                    />
+                  ) : null}
+                </Pressable>
+              );
+            })}
+            <Pressable style={styles.sortMenuDoneButton} onPress={() => setSortMenuOpen(false)}>
+              <Text style={styles.sortMenuDoneText}>Fertig</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
       <FlatList
-        data={visits}
+        data={sortedVisits}
         keyExtractor={(item) => item.id}
         contentContainerStyle={visits.length === 0 ? styles.emptyList : styles.list}
         refreshControl={
@@ -137,6 +260,56 @@ function createStyles(colors: ThemeColors) {
     container: { flex: 1, backgroundColor: colors.background },
     centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
     list: { padding: spacing.lg, gap: spacing.md },
+    sortRow: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.lg,
+    },
+    sortButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      paddingVertical: spacing.xs,
+      paddingHorizontal: spacing.md,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+    },
+    sortButtonText: { color: colors.textPrimary, fontSize: 13, fontWeight: '600' },
+    modalBackdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.4)',
+      justifyContent: 'flex-end',
+    },
+    sortMenu: {
+      backgroundColor: colors.surface,
+      borderTopLeftRadius: radius.lg,
+      borderTopRightRadius: radius.lg,
+      padding: spacing.lg,
+      paddingBottom: spacing.xl,
+      gap: spacing.xs,
+    },
+    sortMenuTitle: {
+      fontWeight: '600',
+      fontSize: 16,
+      color: colors.textPrimary,
+      marginBottom: spacing.sm,
+    },
+    sortMenuRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    sortMenuRowPressed: { opacity: 0.6 },
+    sortMenuRowText: { fontSize: 15, color: colors.textPrimary },
+    sortMenuRowTextActive: { color: colors.accent, fontWeight: '600' },
+    sortMenuDoneButton: { alignItems: 'center', paddingVertical: spacing.md, marginTop: spacing.sm },
+    sortMenuDoneText: { color: colors.accent, fontWeight: '600' },
     emptyList: { flexGrow: 1 },
     emptyTitle: { fontSize: 18, fontWeight: '600', marginBottom: spacing.sm, color: colors.textPrimary },
     emptyHint: { color: colors.textSecondary, textAlign: 'center' },
