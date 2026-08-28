@@ -10,6 +10,7 @@ import {
   RefreshControl,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { cinemaVisitService } from '../../src/services/CinemaVisitService';
@@ -68,6 +69,12 @@ function compareDates(a: string | null, b: string | null, direction: SortDirecti
   return direction === 'asc' ? cmp : -cmp;
 }
 
+function matchesQuery(visit: CinemaVisitWithDetails, query: string): boolean {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  return visit.movie.title.toLowerCase().includes(q) || visit.cinema.name.toLowerCase().includes(q);
+}
+
 function sortVisits(visits: CinemaVisitWithDetails[], sort: SortState): CinemaVisitWithDetails[] {
   const sorted = [...visits];
   const { mode, direction } = sort;
@@ -101,8 +108,12 @@ export default function LibraryScreen() {
   const [error, setError] = useState<string | null>(null);
   const [sort, setSort] = useState<SortState>({ mode: 'visited', direction: 'desc' });
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const sortedVisits = useMemo(() => sortVisits(visits, sort), [visits, sort]);
+  const visibleVisits = useMemo(
+    () => sortVisits(visits.filter((visit) => matchesQuery(visit, searchQuery)), sort),
+    [visits, searchQuery, sort]
+  );
 
   function handleSelectSort(mode: SortMode) {
     setSort((current) =>
@@ -148,12 +159,26 @@ export default function LibraryScreen() {
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
       {visits.length > 0 ? (
-        <View style={styles.sortRow}>
+        <View style={styles.toolbarRow}>
+          <View style={styles.searchInputWrapper}>
+            <Ionicons name="search" size={16} color={colors.textSecondary} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Film oder Kino suchen"
+              placeholderTextColor={colors.textSecondary}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoCapitalize="none"
+            />
+            {searchQuery ? (
+              <Pressable onPress={() => setSearchQuery('')} hitSlop={8}>
+                <Ionicons name="close-circle" size={16} color={colors.textSecondary} />
+              </Pressable>
+            ) : null}
+          </View>
+
           <Pressable style={styles.sortButton} onPress={() => setSortMenuOpen(true)}>
             <Ionicons name="swap-vertical" size={16} color={colors.textPrimary} />
-            <Text style={styles.sortButtonText}>
-              {SORT_OPTIONS.find((option) => option.value === sort.mode)?.label}
-            </Text>
             <Ionicons
               name={sort.direction === 'asc' ? 'arrow-up' : 'arrow-down'}
               size={14}
@@ -201,19 +226,28 @@ export default function LibraryScreen() {
       </Modal>
 
       <FlatList
-        data={sortedVisits}
+        data={visibleVisits}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={visits.length === 0 ? styles.emptyList : styles.list}
+        contentContainerStyle={visibleVisits.length === 0 ? styles.emptyList : styles.list}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={() => loadVisits(true)} tintColor={colors.accent} />
         }
         ListEmptyComponent={
           <View style={styles.centered}>
             <Ionicons name="film-outline" size={40} color={colors.textSecondary} style={{ marginBottom: spacing.md }} />
-            <Text style={styles.emptyTitle}>Noch keine Kinobesuche</Text>
-            <Text style={styles.emptyHint}>
-              Tippe unten auf "Kinobesuch", um deinen ersten Eintrag anzulegen.
-            </Text>
+            {visits.length === 0 ? (
+              <>
+                <Text style={styles.emptyTitle}>Noch keine Kinobesuche</Text>
+                <Text style={styles.emptyHint}>
+                  Tippe unten auf "Kinobesuch", um deinen ersten Eintrag anzulegen.
+                </Text>
+              </>
+            ) : (
+              <>
+                <Text style={styles.emptyTitle}>Keine Treffer</Text>
+                <Text style={styles.emptyHint}>Für "{searchQuery}" wurde nichts gefunden.</Text>
+              </>
+            )}
           </View>
         }
         renderItem={({ item }) => (
@@ -260,13 +294,15 @@ function createStyles(colors: ThemeColors) {
     container: { flex: 1, backgroundColor: colors.background },
     centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
     list: { padding: spacing.lg, gap: spacing.md },
-    sortRow: {
+    toolbarRow: {
       flexDirection: 'row',
-      justifyContent: 'flex-end',
+      alignItems: 'center',
+      gap: spacing.sm,
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.lg,
     },
-    sortButton: {
+    searchInputWrapper: {
+      flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.xs,
@@ -277,7 +313,18 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.border,
       backgroundColor: colors.surface,
     },
-    sortButtonText: { color: colors.textPrimary, fontSize: 13, fontWeight: '600' },
+    searchInput: { flex: 1, color: colors.textPrimary, fontSize: 14, padding: 0 },
+    sortButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 2,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.sm,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+    },
     modalBackdrop: {
       flex: 1,
       backgroundColor: 'rgba(0,0,0,0.4)',

@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -26,6 +26,12 @@ function parseScanHandoff(raw: string | undefined): ScanHandoff | null {
   }
 }
 
+// Ab 2 Zeichen wird gesucht (1 Zeichen liefert fast nur Rauschen), mit
+// Debounce statt bei jedem Tastendruck - sonst geht bei jedem Buchstaben ein
+// TMDB-Request raus (unnoetig viele Anfragen, Rate-Limit-Risiko).
+const MIN_QUERY_LENGTH = 2;
+const DEBOUNCE_MS = 400;
+
 // Manuelle Filmsuche UI (idee.md: "Film-Suche über TMDB"). Ist auch der
 // gemeinsame zweite Schritt des Ticket-Scan-Flows (scan-ticket.tsx): kommt
 // der "scan" Param mit erkanntem Filmtitel an, wird direkt automatisch
@@ -43,32 +49,50 @@ export default function SearchMovieScreen() {
   const [selectingId, setSelectingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const requestIdRef = useRef(0);
+  const isFirstRun = useRef(true);
 
   async function handleSearch(searchQuery?: string) {
     const trimmed = (searchQuery ?? query).trim();
     if (!trimmed) return;
 
+    // Falls waehrenddessen eine neuere Suche gestartet wurde, wird die
+    // Antwort dieser (aelteren) Anfrage verworfen - verhindert, dass eine
+    // langsame Antwort eine bereits neuere ueberschreibt.
+    const requestId = ++requestIdRef.current;
     setSearching(true);
     setError(null);
     setHasSearched(true);
     try {
       const found = await tmdbMovieProvider.searchMovies(trimmed);
+      if (requestId !== requestIdRef.current) return;
       setResults(found);
     } catch {
+      if (requestId !== requestIdRef.current) return;
       setError('Filmsuche fehlgeschlagen. Bitte versuche es erneut.');
       setResults([]);
     } finally {
-      setSearching(false);
+      if (requestId === requestIdRef.current) setSearching(false);
     }
   }
 
-  // Bei erkanntem Filmtitel aus dem Ticket-Scan einmalig automatisch suchen.
+  // Hotsearch: sucht automatisch waehrend der Eingabe (ab MIN_QUERY_LENGTH
+  // Zeichen, per Debounce). Bei einem aus dem Ticket-Scan vorbefuellten Titel
+  // wird beim allerersten Aufruf ohne Verzoegerung gesucht.
   useEffect(() => {
-    if (scanHandoff?.data.movieTitle) {
-      handleSearch(scanHandoff.data.movieTitle);
+    const trimmed = query.trim();
+    if (trimmed.length < MIN_QUERY_LENGTH) {
+      setResults([]);
+      setHasSearched(false);
+      isFirstRun.current = false;
+      return;
     }
+    const delay = isFirstRun.current && scanHandoff?.data.movieTitle ? 0 : DEBOUNCE_MS;
+    isFirstRun.current = false;
+    const timeout = setTimeout(() => handleSearch(trimmed), delay);
+    return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [query]);
 
   async function handleSelect(result: MovieSearchResult) {
     setSelectingId(result.providerId);
