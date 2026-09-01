@@ -118,9 +118,16 @@ export default function WatchlistScreen() {
             </View>
             <Pressable
               hitSlop={8}
+              onPress={() => router.push({ pathname: '/movie/[id]', params: { id: item.movie.id } })}
+              style={styles.iconButton}
+            >
+              <Ionicons name="film-outline" size={18} color={colors.textSecondary} />
+            </Pressable>
+            <Pressable
+              hitSlop={8}
               onPress={() => handleRemove(item.id)}
               disabled={removingId === item.id}
-              style={styles.removeButton}
+              style={styles.iconButton}
             >
               {removingId === item.id ? (
                 <ActivityIndicator size="small" color={colors.textSecondary} />
@@ -168,7 +175,7 @@ function createStyles(colors: ThemeColors) {
     info: { flex: 1, gap: 2 },
     movieTitle: { fontSize: 16, fontWeight: '600', color: colors.textPrimary },
     meta: { color: colors.textSecondary },
-    removeButton: { padding: spacing.xs },
+    iconButton: { padding: spacing.xs },
     fab: {
       position: 'absolute',
       flexDirection: 'row',

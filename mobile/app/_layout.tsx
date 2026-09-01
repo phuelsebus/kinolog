@@ -22,6 +22,7 @@ function ThemedStack() {
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="visit/[id]" options={{ title: 'Kinobesuch' }} />
+        <Stack.Screen name="movie/[id]" options={{ title: 'Film' }} />
         <Stack.Screen name="scan-ticket" options={{ title: 'Ticket scannen', presentation: 'modal' }} />
         <Stack.Screen name="search-movie" options={{ title: 'Film suchen', presentation: 'modal' }} />
         <Stack.Screen name="new-visit" options={{ title: 'Kinobesuch erfassen', presentation: 'modal' }} />

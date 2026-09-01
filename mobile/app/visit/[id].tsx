@@ -1,16 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  Image,
-  Linking,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import MovieDetails from '../../src/components/MovieDetails';
 import { getTicketImageSignedUrl } from '../../src/lib/ticketImages';
 import { cinemaVisitService } from '../../src/services/CinemaVisitService';
 import { radius, spacing } from '../../src/theme/spacing';
@@ -125,48 +117,15 @@ export default function CinemaVisitDetailScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {movie.backdropUrl ? <Image source={{ uri: movie.backdropUrl }} style={styles.backdrop} /> : null}
-
-      <View style={styles.headerRow}>
-        {movie.posterUrl ? <Image source={{ uri: movie.posterUrl }} style={styles.poster} /> : null}
-        <View style={styles.headerInfo}>
-          <Text style={styles.movieTitle}>{movie.title}</Text>
-          {movie.originalTitle && movie.originalTitle !== movie.title ? (
-            <Text style={styles.originalTitle}>{movie.originalTitle}</Text>
-          ) : null}
-          <Text style={styles.metaText}>
-            {[movie.releaseDate?.slice(0, 4), movie.runtime ? `${movie.runtime} min` : null]
-              .filter(Boolean)
-              .join(' · ')}
-          </Text>
-          {movie.genres.length > 0 ? <Text style={styles.metaText}>{movie.genres.join(', ')}</Text> : null}
+      <MovieDetails movie={movie}>
+        <View style={styles.starsRow}>
+          {[1, 2, 3, 4, 5].map((n) => (
+            <Pressable key={n} onPress={() => handleRatingChange(n)} disabled={updatingRating}>
+              <Text style={styles.star}>{visit.rating && n <= visit.rating ? '★' : '☆'}</Text>
+            </Pressable>
+          ))}
         </View>
-      </View>
-
-      <View style={styles.starsRow}>
-        {[1, 2, 3, 4, 5].map((n) => (
-          <Pressable key={n} onPress={() => handleRatingChange(n)} disabled={updatingRating}>
-            <Text style={styles.star}>{visit.rating && n <= visit.rating ? '★' : '☆'}</Text>
-          </Pressable>
-        ))}
-      </View>
-
-      {movie.trailerUrl ? (
-        <Pressable
-          style={({ pressed }) => [styles.trailerButton, pressed && styles.trailerButtonPressed]}
-          onPress={() => Linking.openURL(movie.trailerUrl!)}
-        >
-          <Ionicons name="play-circle" size={20} color={colors.accentText} />
-          <Text style={styles.trailerButtonText}>Trailer ansehen</Text>
-        </Pressable>
-      ) : null}
-
-      {movie.overview ? (
-        <>
-          <Text style={styles.sectionTitle}>Handlung</Text>
-          <Text style={styles.overview}>{movie.overview}</Text>
-        </>
-      ) : null}
+      </MovieDetails>
 
       <Text style={styles.sectionTitle}>Kino</Text>
       <Text style={styles.bodyText}>{cinema.name}</Text>
@@ -250,29 +209,9 @@ function createStyles(colors: ThemeColors) {
     container: { paddingBottom: spacing.xxl + spacing.lg, backgroundColor: colors.background },
     centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl, backgroundColor: colors.background },
     error: { color: colors.error, textAlign: 'center' },
-    backdrop: { width: '100%', height: 180, backgroundColor: colors.surfaceAlt },
-    headerRow: { flexDirection: 'row', gap: spacing.md, padding: spacing.lg },
-    poster: { width: 90, height: 135, borderRadius: radius.md, backgroundColor: colors.surfaceAlt },
-    headerInfo: { flex: 1, justifyContent: 'center', gap: spacing.xs },
-    movieTitle: { fontSize: 20, fontWeight: '700', color: colors.textPrimary },
-    originalTitle: { color: colors.textSecondary, fontStyle: 'italic' },
-    metaText: { color: colors.textSecondary },
     sectionMetaText: { color: colors.textSecondary, marginHorizontal: spacing.lg },
     starsRow: { flexDirection: 'row', gap: spacing.sm, paddingHorizontal: spacing.lg, marginBottom: spacing.sm },
     star: { fontSize: 28, color: colors.rating },
-    trailerButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: spacing.xs,
-      marginHorizontal: spacing.lg,
-      marginBottom: spacing.lg,
-      backgroundColor: colors.accent,
-      borderRadius: radius.md,
-      paddingVertical: spacing.md,
-    },
-    trailerButtonPressed: { opacity: 0.85 },
-    trailerButtonText: { color: colors.accentText, fontWeight: '600' },
     sectionTitle: {
       fontSize: 16,
       fontWeight: '700',
@@ -282,7 +221,6 @@ function createStyles(colors: ThemeColors) {
       color: colors.textPrimary,
     },
     bodyText: { marginHorizontal: spacing.lg, fontSize: 15, color: colors.textPrimary },
-    overview: { marginHorizontal: spacing.lg, color: colors.textSecondary, lineHeight: 20 },
     ticketImage: { width: '100%', height: 300, marginTop: spacing.sm, backgroundColor: colors.surfaceAlt },
     actions: { marginHorizontal: spacing.lg, marginTop: spacing.xxl, gap: spacing.md },
     editButton: {
