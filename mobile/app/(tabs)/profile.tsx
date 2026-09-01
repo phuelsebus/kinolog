@@ -119,6 +119,15 @@ export default function ProfileScreen() {
         <Text style={styles.email}>{email}</Text>
       </View>
 
+      <Pressable
+        style={({ pressed }) => [styles.wrappedButton, pressed && styles.wrappedButtonPressed]}
+        onPress={() => router.push('/wrapped')}
+      >
+        <Ionicons name="sparkles" size={18} color={colors.accent} />
+        <Text style={styles.wrappedButtonText}>Kino-Jahresrückblick</Text>
+        <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+      </Pressable>
+
       <View style={styles.section}>
         <Text style={styles.sectionLabel}>Rechtliches</Text>
 
@@ -207,6 +216,19 @@ function createStyles(colors: ThemeColors) {
     avatarImage: { width: '100%', height: '100%' },
     name: { fontSize: 18, fontWeight: '600', color: colors.textPrimary },
     email: { color: colors.textSecondary },
+    wrappedButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      backgroundColor: colors.surface,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: colors.border,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.lg,
+    },
+    wrappedButtonPressed: { opacity: 0.75 },
+    wrappedButtonText: { flex: 1, fontSize: 15, fontWeight: '600', color: colors.textPrimary },
     section: {
       backgroundColor: colors.surface,
       borderRadius: radius.lg,

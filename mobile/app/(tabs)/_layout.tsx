@@ -50,6 +50,15 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="watchlist"
+        options={{
+          title: 'Watchlist',
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'bookmark' : 'bookmark-outline'} size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: 'Profil',

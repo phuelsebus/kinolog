@@ -2,7 +2,14 @@
 // Clients (siehe src/types/models.ts). Supabase-js gibt Spalten 1:1 so
 // zurueck, wie sie in der DB heissen, daher zentral an einer Stelle mappen.
 
-import type { Cinema, CinemaVisit, CinemaVisitWithDetails, Movie, TicketType } from '../types/models';
+import type {
+  Cinema,
+  CinemaVisit,
+  CinemaVisitWithDetails,
+  Movie,
+  TicketType,
+  WatchlistItemWithMovie,
+} from '../types/models';
 
 export interface MovieRow {
   id: string;
@@ -108,5 +115,21 @@ export function mapCinemaVisitWithDetailsRow(row: CinemaVisitWithDetailsRow): Ci
     ...mapCinemaVisitRow(row),
     movie: mapMovieRow(row.movie),
     cinema: mapCinemaRow(row.cinema),
+  };
+}
+
+export interface WatchlistItemWithMovieRow {
+  id: string;
+  movie_id: string;
+  created_at: string;
+  movie: MovieRow;
+}
+
+export function mapWatchlistItemWithMovieRow(row: WatchlistItemWithMovieRow): WatchlistItemWithMovie {
+  return {
+    id: row.id,
+    movieId: row.movie_id,
+    createdAt: row.created_at,
+    movie: mapMovieRow(row.movie),
   };
 }

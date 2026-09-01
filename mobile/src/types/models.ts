@@ -99,3 +99,15 @@ export interface CinemaVisitWithDetails extends CinemaVisit {
   movie: Movie;
   cinema: Cinema;
 }
+
+// Film, den der Nutzer noch sehen moechte - getrennt von CinemaVisit
+// (bereits geloggte Besuche).
+export interface WatchlistItem {
+  id: string;
+  movieId: string;
+  createdAt: string;
+}
+
+export interface WatchlistItemWithMovie extends WatchlistItem {
+  movie: Movie;
+}

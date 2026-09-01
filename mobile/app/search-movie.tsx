@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { tmdbMovieProvider } from '../src/services/MovieProvider';
 import type { ScanHandoff } from '../src/services/TicketScanner';
+import { watchlistService } from '../src/services/WatchlistService';
 import { radius, spacing } from '../src/theme/spacing';
 import { useTheme } from '../src/theme/ThemeContext';
 import type { ThemeColors } from '../src/theme/colors';
@@ -39,7 +40,11 @@ const DEBOUNCE_MS = 400;
 // manuell wie im normalen Flow (idee.md Abschnitt 7).
 export default function SearchMovieScreen() {
   const router = useRouter();
-  const { editVisitId, scan } = useLocalSearchParams<{ editVisitId?: string; scan?: string }>();
+  const { editVisitId, scan, mode } = useLocalSearchParams<{
+    editVisitId?: string;
+    scan?: string;
+    mode?: 'visit' | 'watchlist';
+  }>();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const scanHandoff = useMemo(() => parseScanHandoff(scan), [scan]);
@@ -99,6 +104,11 @@ export default function SearchMovieScreen() {
     setError(null);
     try {
       const movie = await tmdbMovieProvider.getMovie(result.providerId);
+      if (mode === 'watchlist') {
+        await watchlistService.add(movie.id);
+        router.back();
+        return;
+      }
       if (editVisitId) {
         // Rueckkehr zu einer bereits offenen edit-visit-Instanz (siehe
         // edit-visit.tsx "Film ändern") statt eines neuen Stack-Eintrags.
