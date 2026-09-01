@@ -1,6 +1,7 @@
 import type { Session } from '@supabase/supabase-js';
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
+import { signInWithOAuth, type OAuthProvider } from '../lib/oauth';
 
 interface AuthContextValue {
   session: Session | null;
@@ -11,6 +12,7 @@ interface AuthContextValue {
     password: string,
     displayName: string
   ) => Promise<{ error: string | null }>;
+  signInWithProvider: (provider: OAuthProvider) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   deleteAccount: () => Promise<{ error: string | null }>;
 }
@@ -54,6 +56,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           options: { data: { display_name: displayName || null } },
         });
         return { error: error?.message ?? null };
+      },
+      async signInWithProvider(provider) {
+        return signInWithOAuth(provider);
       },
       async signOut() {
         await supabase.auth.signOut();

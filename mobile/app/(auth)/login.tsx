@@ -13,7 +13,9 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/context/AuthContext';
+import type { OAuthProvider } from '../../src/lib/oauth';
 import { radius, spacing } from '../../src/theme/spacing';
 import { useTheme } from '../../src/theme/ThemeContext';
 import type { ThemeColors } from '../../src/theme/colors';
@@ -24,13 +26,14 @@ import type { ThemeColors } from '../../src/theme/colors';
 const webNoOutline = Platform.OS === 'web' ? { outlineWidth: 0 } : null;
 
 export default function LoginScreen() {
-  const { signIn } = useAuth();
+  const { signIn, signInWithProvider } = useAuth();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [oauthProvider, setOauthProvider] = useState<OAuthProvider | null>(null);
 
   const logoOpacity = useRef(new Animated.Value(0)).current;
   const logoScale = useRef(new Animated.Value(0.4)).current;
@@ -69,6 +72,18 @@ export default function LoginScreen() {
     setSubmitting(false);
     if (signInError) {
       setError(signInError);
+      return;
+    }
+    router.replace('/(tabs)');
+  }
+
+  async function handleOAuthSignIn(provider: OAuthProvider) {
+    setError(null);
+    setOauthProvider(provider);
+    const { error: oauthError } = await signInWithProvider(provider);
+    setOauthProvider(null);
+    if (oauthError) {
+      setError(oauthError);
       return;
     }
     router.replace('/(tabs)');
@@ -137,6 +152,29 @@ export default function LoginScreen() {
         </Pressable>
       </View>
 
+      <View style={styles.dividerRow}>
+        <View style={styles.dividerLine} />
+        <Text style={styles.dividerText}>oder</Text>
+        <View style={styles.dividerLine} />
+      </View>
+
+      <View style={styles.oauthGroup}>
+        <Pressable
+          style={({ pressed }) => [styles.oauthButton, pressed && styles.oauthButtonPressed]}
+          onPress={() => handleOAuthSignIn('google')}
+          disabled={oauthProvider !== null}
+        >
+          {oauthProvider === 'google' ? (
+            <ActivityIndicator color={colors.textPrimary} />
+          ) : (
+            <>
+              <Ionicons name="logo-google" size={18} color={colors.textPrimary} />
+              <Text style={styles.oauthButtonText}>Mit Google anmelden</Text>
+            </>
+          )}
+        </Pressable>
+      </View>
+
       <Link href="/(auth)/register" style={styles.link}>
         Noch keinen Account? Jetzt registrieren
       </Link>
@@ -185,6 +223,23 @@ function createStyles(colors: ThemeColors) {
     buttonPressed: { opacity: 0.85 },
     buttonText: { color: colors.accentText, fontSize: 16, fontWeight: '600' },
     error: { color: colors.error, textAlign: 'center' },
+    dividerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.xl },
+    dividerLine: { flex: 1, height: 1, backgroundColor: colors.border },
+    dividerText: { color: colors.textSecondary, fontSize: 13 },
+    oauthGroup: { gap: spacing.sm, marginTop: spacing.lg },
+    oauthButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.sm,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radius.md,
+      paddingVertical: spacing.md,
+    },
+    oauthButtonPressed: { opacity: 0.75 },
+    oauthButtonText: { color: colors.textPrimary, fontSize: 15, fontWeight: '600' },
     link: { textAlign: 'center', marginTop: spacing.lg, color: colors.accent, fontWeight: '500' },
   });
 }
