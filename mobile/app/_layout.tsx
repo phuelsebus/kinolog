@@ -31,6 +31,7 @@ function ThemedStack() {
         <Stack.Screen name="wrapped" options={{ title: 'Kino-Jahresrückblick', presentation: 'modal' }} />
         <Stack.Screen name="legal/imprint" options={{ title: 'Impressum' }} />
         <Stack.Screen name="legal/privacy" options={{ title: 'Datenschutz' }} />
+        <Stack.Screen name="legal/terms" options={{ title: 'Nutzungsbedingungen' }} />
       </Stack>
     </>
   );

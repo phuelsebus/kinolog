@@ -139,6 +139,10 @@ export default function ProfileScreen() {
           <Text style={styles.legalRowText}>Datenschutz</Text>
           <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
         </Pressable>
+        <Pressable style={({ pressed }) => [styles.legalRow, pressed && styles.legalRowPressed]} onPress={() => router.push('/legal/terms')}>
+          <Text style={styles.legalRowText}>Nutzungsbedingungen</Text>
+          <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+        </Pressable>
 
         <Text style={styles.tmdbNotice}>
           Filmdaten von TMDB. Dieses Produkt verwendet die TMDB API, wird aber nicht von TMDB gebilligt oder
