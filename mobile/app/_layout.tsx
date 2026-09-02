@@ -1,5 +1,6 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider } from '../src/context/AuthContext';
 import { ThemeProvider, useTheme } from '../src/theme/ThemeContext';
 import { ThemeToggleButton } from '../src/theme/ThemeToggleButton';
@@ -37,10 +38,15 @@ function ThemedStack() {
 
 export default function RootLayout() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <ThemedStack />
-      </AuthProvider>
-    </ThemeProvider>
+    // Noetig fuer Swipe-Gesten (Wisch-zum-Loeschen in Bibliothek/Watchlist,
+    // siehe SwipeableRow.tsx) - ohne diesen Wrapper funktionieren
+    // react-native-gesture-handler-Gesten auf Android nicht zuverlaessig.
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider>
+        <AuthProvider>
+          <ThemedStack />
+        </AuthProvider>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }

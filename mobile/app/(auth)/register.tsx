@@ -73,7 +73,6 @@ export default function RegisterScreen() {
         autoCapitalize="words"
         value={displayName}
         onChangeText={setDisplayName}
-        onFocus={scrollToEnd}
       />
       <TextInput
         style={styles.input}
@@ -84,7 +83,6 @@ export default function RegisterScreen() {
         autoComplete="email"
         value={email}
         onChangeText={setEmail}
-        onFocus={scrollToEnd}
       />
       <TextInput
         style={styles.input}
