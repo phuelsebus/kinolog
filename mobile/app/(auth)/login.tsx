@@ -168,7 +168,21 @@ export default function LoginScreen() {
           ) : (
             <>
               <Ionicons name="logo-google" size={18} color={colors.textPrimary} />
-              <Text style={styles.oauthButtonText}>Mit Google anmelden</Text>
+              <Text style={styles.oauthButtonText}>Google</Text>
+            </>
+          )}
+        </Pressable>
+        <Pressable
+          style={({ pressed }) => [styles.oauthButton, pressed && styles.oauthButtonPressed]}
+          onPress={() => handleOAuthSignIn('discord')}
+          disabled={oauthProvider !== null}
+        >
+          {oauthProvider === 'discord' ? (
+            <ActivityIndicator color={colors.textPrimary} />
+          ) : (
+            <>
+              <Ionicons name="logo-discord" size={18} color={colors.textPrimary} />
+              <Text style={styles.oauthButtonText}>Discord</Text>
             </>
           )}
         </Pressable>
@@ -225,8 +239,9 @@ function createStyles(colors: ThemeColors) {
     dividerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.xl },
     dividerLine: { flex: 1, height: 1, backgroundColor: colors.border },
     dividerText: { color: colors.textSecondary, fontSize: 13 },
-    oauthGroup: { gap: spacing.sm, marginTop: spacing.lg },
+    oauthGroup: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.lg },
     oauthButton: {
+      flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',

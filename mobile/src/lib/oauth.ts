@@ -7,21 +7,21 @@ import { supabase } from './supabase';
 // WebBrowser.openAuthSessionAsync geoeffnete Session sich korrekt aufloest.
 WebBrowser.maybeCompleteAuthSession();
 
-export type OAuthProvider = 'google';
+export type OAuthProvider = 'google' | 'discord';
 
 const redirectTo = makeRedirectUri({ scheme: 'kinolog', path: 'auth-callback' });
 
 /**
- * Google-Login via Supabase Auth OAuth-Flow. Oeffnet den Google-Login im
- * System-Browser (App-Wechsel ist bei OAuth normal), Supabase verarbeitet
- * den Callback serverseitig und leitet danach zu redirectTo zurueck
- * ("kinolog://auth-callback") - von dort werden die Tokens aus der URL
- * extrahiert und die Session gesetzt.
+ * Google-/Discord-Login via Supabase Auth OAuth-Flow. Oeffnet den Login des
+ * Providers im System-Browser (App-Wechsel ist bei OAuth normal), Supabase
+ * verarbeitet den Callback serverseitig und leitet danach zu redirectTo
+ * zurueck ("kinolog://auth-callback") - von dort werden die Tokens aus der
+ * URL extrahiert und die Session gesetzt.
  *
- * Funktioniert NICHT in Expo Go: Google akzeptiert nur fest registrierte
- * Redirect-URLs, Expo Go hat aber kein festes eigenes URL-Schema. Braucht
- * einen Dev-Client- oder Standalone-Build, der das in app.json
- * konfigurierte "kinolog://"-Schema tatsaechlich registriert.
+ * Funktioniert NICHT in Expo Go: die Provider akzeptieren nur fest
+ * registrierte Redirect-URLs, Expo Go hat aber kein festes eigenes
+ * URL-Schema. Braucht einen Dev-Client- oder Standalone-Build, der das in
+ * app.json konfigurierte "kinolog://"-Schema tatsaechlich registriert.
  */
 export async function signInWithOAuth(provider: OAuthProvider): Promise<{ error: string | null }> {
   const { data, error } = await supabase.auth.signInWithOAuth({
