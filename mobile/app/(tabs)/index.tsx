@@ -13,6 +13,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import SwipeableRow from '../../src/components/SwipeableRow';
 import { cinemaVisitService } from '../../src/services/CinemaVisitService';
 import { radius, spacing } from '../../src/theme/spacing';
 import { useTheme } from '../../src/theme/ThemeContext';
@@ -114,6 +115,15 @@ export default function LibraryScreen() {
     () => sortVisits(visits.filter((visit) => matchesQuery(visit, searchQuery)), sort),
     [visits, searchQuery, sort]
   );
+
+  async function handleDeleteVisit(visit: CinemaVisitWithDetails) {
+    try {
+      await cinemaVisitService.deleteVisit(visit.id, visit.ticketImageUrl);
+      setVisits((current) => current.filter((v) => v.id !== visit.id));
+    } catch {
+      setError('Kinobesuch konnte nicht gelöscht werden.');
+    }
+  }
 
   function handleSelectSort(mode: SortMode) {
     setSort((current) =>
@@ -251,23 +261,29 @@ export default function LibraryScreen() {
           </View>
         }
         renderItem={({ item }) => (
-          <Pressable
-            style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
-            onPress={() => router.push({ pathname: '/visit/[id]', params: { id: item.id } })}
+          <SwipeableRow
+            onDelete={() => handleDeleteVisit(item)}
+            confirmTitle="Kinobesuch löschen?"
+            confirmMessage={`"${item.movie.title}" wird unwiderruflich aus deiner Bibliothek entfernt.`}
           >
-            {item.movie.posterUrl ? (
-              <Image source={{ uri: item.movie.posterUrl }} style={styles.poster} />
-            ) : (
-              <View style={[styles.poster, styles.posterPlaceholder]} />
-            )}
-            <View style={styles.info}>
-              <Text style={styles.movieTitle}>{item.movie.title}</Text>
-              <Text style={styles.meta}>
-                {formatDate(item.watchedAt)} · {item.cinema.name}
-              </Text>
-              <StarRating rating={item.rating} color={colors.rating} />
-            </View>
-          </Pressable>
+            <Pressable
+              style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
+              onPress={() => router.push({ pathname: '/visit/[id]', params: { id: item.id } })}
+            >
+              {item.movie.posterUrl ? (
+                <Image source={{ uri: item.movie.posterUrl }} style={styles.poster} />
+              ) : (
+                <View style={[styles.poster, styles.posterPlaceholder]} />
+              )}
+              <View style={styles.info}>
+                <Text style={styles.movieTitle}>{item.movie.title}</Text>
+                <Text style={styles.meta}>
+                  {formatDate(item.watchedAt)} · {item.cinema.name}
+                </Text>
+                <StarRating rating={item.rating} color={colors.rating} />
+              </View>
+            </Pressable>
+          </SwipeableRow>
         )}
       />
 
@@ -293,7 +309,10 @@ function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
     centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
-    list: { padding: spacing.lg, gap: spacing.md },
+    // paddingBottom grosszuegig, damit die letzten Zeilen ueber die zwei
+    // schwebenden Buttons (FAB "Kinobesuch" + Scan-FAB) hinaus scrollbar
+    // sind - sonst liegen deren Wisch-Aktionen dauerhaft unter den Buttons.
+    list: { padding: spacing.lg, paddingBottom: spacing.xxl * 5, gap: spacing.md },
     toolbarRow: {
       flexDirection: 'row',
       alignItems: 'center',

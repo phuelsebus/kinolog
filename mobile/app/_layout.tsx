@@ -1,5 +1,6 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider } from '../src/context/AuthContext';
 import { ThemeProvider, useTheme } from '../src/theme/ThemeContext';
 import { ThemeToggleButton } from '../src/theme/ThemeToggleButton';
@@ -22,10 +23,12 @@ function ThemedStack() {
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="visit/[id]" options={{ title: 'Kinobesuch' }} />
+        <Stack.Screen name="movie/[id]" options={{ title: 'Film' }} />
         <Stack.Screen name="scan-ticket" options={{ title: 'Ticket scannen', presentation: 'modal' }} />
         <Stack.Screen name="search-movie" options={{ title: 'Film suchen', presentation: 'modal' }} />
         <Stack.Screen name="new-visit" options={{ title: 'Kinobesuch erfassen', presentation: 'modal' }} />
         <Stack.Screen name="edit-visit" options={{ title: 'Kinobesuch bearbeiten', presentation: 'modal' }} />
+        <Stack.Screen name="wrapped" options={{ title: 'Kino-Jahresrückblick', presentation: 'modal' }} />
         <Stack.Screen name="legal/imprint" options={{ title: 'Impressum' }} />
         <Stack.Screen name="legal/privacy" options={{ title: 'Datenschutz' }} />
       </Stack>
@@ -35,10 +38,15 @@ function ThemedStack() {
 
 export default function RootLayout() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <ThemedStack />
-      </AuthProvider>
-    </ThemeProvider>
+    // Noetig fuer Swipe-Gesten (Wisch-zum-Loeschen in Bibliothek/Watchlist,
+    // siehe SwipeableRow.tsx) - ohne diesen Wrapper funktionieren
+    // react-native-gesture-handler-Gesten auf Android nicht zuverlaessig.
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider>
+        <AuthProvider>
+          <ThemedStack />
+        </AuthProvider>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }

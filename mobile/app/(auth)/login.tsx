@@ -124,7 +124,6 @@ export default function LoginScreen() {
           autoComplete="email"
           value={email}
           onChangeText={setEmail}
-          onFocus={scrollToEnd}
         />
         <TextInput
           style={[styles.input, webNoOutline]}
