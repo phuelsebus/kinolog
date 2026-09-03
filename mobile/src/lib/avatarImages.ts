@@ -3,6 +3,13 @@ import { supabase } from './supabase';
 
 const AVATAR_BUCKET = 'avatars';
 
+// Einzige Quelle fuer die Pfadkonvention (<user_id>/avatar, siehe unten) -
+// auch von ProfileService.updateAvatarUrl genutzt, damit der Pfad nie vom
+// Aufrufer frei vorgegeben werden kann (siehe dortiger Kommentar).
+export function avatarPathFor(userId: string): string {
+  return `${userId}/avatar`;
+}
+
 function mimeFromUri(uri: string): string {
   const match = /\.([a-zA-Z0-9]+)(?:\?.*)?$/.exec(uri);
   const ext = match ? match[1].toLowerCase() : 'jpg';
@@ -24,7 +31,7 @@ function mimeFromUri(uri: string): string {
  */
 export async function uploadAvatarImage(userId: string, uri: string): Promise<string> {
   const arrayBuffer = await new File(uri).arrayBuffer();
-  const path = `${userId}/avatar`;
+  const path = avatarPathFor(userId);
 
   const { error } = await supabase.storage
     .from(AVATAR_BUCKET)

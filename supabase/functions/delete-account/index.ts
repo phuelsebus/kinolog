@@ -12,6 +12,28 @@ import "@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "@supabase/server";
 
 const USER_STORAGE_BUCKETS = ["ticket-images", "avatars"];
+const LIST_PAGE_SIZE = 100;
+
+// storage.list() liefert standardmaessig max. 100 Eintraege pro Aufruf -
+// ohne Paginierung wuerden bei einem Nutzer mit mehr als 100 Ticketfotos
+// nur die ersten 100 geloescht und der Rest verwaist im Bucket zurueckbleiben
+// (widerspricht dem Vollstaendigkeits-Versprechen der Konto-Loeschung).
+// deno-lint-ignore no-explicit-any
+async function listAllFiles(storage: any, bucket: string, userId: string): Promise<string[]> {
+  const names: string[] = [];
+  let offset = 0;
+  for (;;) {
+    const { data: files, error } = await storage
+      .from(bucket)
+      .list(userId, { limit: LIST_PAGE_SIZE, offset });
+    if (error) throw error;
+    if (!files || files.length === 0) break;
+    names.push(...files.map((file: { name: string }) => `${userId}/${file.name}`));
+    if (files.length < LIST_PAGE_SIZE) break;
+    offset += LIST_PAGE_SIZE;
+  }
+  return names;
+}
 
 export default {
   fetch: withSupabase({ auth: "user" }, async (req, ctx) => {
@@ -26,11 +48,9 @@ export default {
 
     try {
       for (const bucket of USER_STORAGE_BUCKETS) {
-        const { data: files } = await ctx.supabaseAdmin.storage.from(bucket).list(userId);
-        if (files && files.length > 0) {
-          await ctx.supabaseAdmin.storage
-            .from(bucket)
-            .remove(files.map((file) => `${userId}/${file.name}`));
+        const paths = await listAllFiles(ctx.supabaseAdmin.storage, bucket, userId);
+        if (paths.length > 0) {
+          await ctx.supabaseAdmin.storage.from(bucket).remove(paths);
         }
       }
 

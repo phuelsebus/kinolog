@@ -67,7 +67,7 @@ export default function ProfileScreen() {
     setUploadingAvatar(true);
     try {
       const path = await uploadAvatarImage(session.user.id, result.assets[0].uri);
-      await profileService.updateAvatarUrl(session.user.id, path);
+      await profileService.updateAvatarUrl(session.user.id);
       setAvatarPath(path);
       // Der Storage-Pfad bleibt beim erneuten Hochladen immer gleich (fixer
       // Dateiname, siehe uploadAvatarImage) - der obige setAvatarPath allein

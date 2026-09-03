@@ -9,11 +9,23 @@ import "@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "@supabase/server";
 import { searchCinemasOverpass } from "../_shared/overpass.ts";
 import { bboxAround, geocodeCity } from "../_shared/geocoding.ts";
+import { checkRateLimit, rateLimitResponse } from "../_shared/rateLimit.ts";
+
+// Wird ueber einen expliziten Button-Klick ausgeloest (nicht per Tastendruck-
+// Debounce wie movie-search) - normale Nutzung braucht nur eine Handvoll
+// Aufrufe pro Sitzung, das Limit ist trotzdem grosszuegig gegen falsch-positive Sperren.
+const RATE_LIMIT = 20;
+const RATE_LIMIT_WINDOW_MINUTES = 5;
 
 export default {
-  fetch: withSupabase({ auth: "user" }, async (req) => {
+  fetch: withSupabase({ auth: "user" }, async (req, ctx) => {
     if (req.method !== "POST") {
       return Response.json({ error: "Method not allowed" }, { status: 405 });
+    }
+
+    const userId = ctx.userClaims?.id;
+    if (!userId) {
+      return Response.json({ error: "Nicht angemeldet." }, { status: 401 });
     }
 
     let query: string | undefined;
@@ -30,6 +42,9 @@ export default {
     if (!city || typeof city !== "string" || city.trim().length === 0) {
       return Response.json({ error: "'city' ist erforderlich." }, { status: 400 });
     }
+
+    const allowed = await checkRateLimit(ctx.supabaseAdmin, userId, "cinema-search", RATE_LIMIT, RATE_LIMIT_WINDOW_MINUTES);
+    if (!allowed) return rateLimitResponse();
 
     try {
       // Erst die Stadt geocoden, um eine kleine (schnelle) Bounding Box fuer

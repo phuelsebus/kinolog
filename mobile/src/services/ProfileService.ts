@@ -1,3 +1,4 @@
+import { avatarPathFor } from '../lib/avatarImages';
 import { supabase } from '../lib/supabase';
 
 // profiles ist die kanonische Quelle fuer User.displayName (idee.md Abschnitt 5),
@@ -11,7 +12,7 @@ export interface Profile {
 
 export interface ProfileService {
   getProfile(userId: string): Promise<Profile>;
-  updateAvatarUrl(userId: string, avatarUrl: string): Promise<void>;
+  updateAvatarUrl(userId: string): Promise<void>;
 }
 
 export const profileService: ProfileService = {
@@ -26,8 +27,16 @@ export const profileService: ProfileService = {
     return { displayName: data?.display_name ?? null, avatarUrl: data?.avatar_url ?? null };
   },
 
-  async updateAvatarUrl(userId: string, avatarUrl: string): Promise<void> {
-    const { error } = await supabase.from('profiles').update({ avatar_url: avatarUrl }).eq('id', userId);
+  // Nimmt bewusst keinen freien avatarUrl-Parameter entgegen - der Pfad
+  // wird immer aus der eigenen userId abgeleitet (avatarPathFor), damit ein
+  // Nutzer sein Profil nie auf den Storage-Pfad eines anderen Nutzers zeigen
+  // lassen kann (RLS auf storage.objects wuerde das Signieren zwar ohnehin
+  // verhindern, aber so ist es gar nicht erst moeglich, es zu versuchen).
+  async updateAvatarUrl(userId: string): Promise<void> {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ avatar_url: avatarPathFor(userId) })
+      .eq('id', userId);
     if (error) throw error;
   },
 };

@@ -38,8 +38,8 @@ export default function RegisterScreen() {
       setError('Bitte E-Mail und Passwort eingeben.');
       return;
     }
-    if (password.length < 6) {
-      setError('Das Passwort muss mindestens 6 Zeichen lang sein.');
+    if (password.length < 8) {
+      setError('Das Passwort muss mindestens 8 Zeichen lang sein.');
       return;
     }
     setError(null);
@@ -86,7 +86,7 @@ export default function RegisterScreen() {
       />
       <TextInput
         style={styles.input}
-        placeholder="Passwort (mind. 6 Zeichen)"
+        placeholder="Passwort (mind. 8 Zeichen)"
         placeholderTextColor={colors.textSecondary}
         secureTextEntry
         autoComplete="password-new"

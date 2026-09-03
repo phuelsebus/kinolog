@@ -7,11 +7,20 @@ import "@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "@supabase/server";
 import { getMovie } from "../_shared/tmdb.ts";
 import { mapMovieRow, type MovieRow } from "../_shared/movie-mapper.ts";
+import { checkRateLimit, rateLimitResponse } from "../_shared/rateLimit.ts";
+
+const RATE_LIMIT = 60;
+const RATE_LIMIT_WINDOW_MINUTES = 5;
 
 export default {
   fetch: withSupabase({ auth: "user" }, async (req, ctx) => {
     if (req.method !== "POST") {
       return Response.json({ error: "Method not allowed" }, { status: 405 });
+    }
+
+    const userId = ctx.userClaims?.id;
+    if (!userId) {
+      return Response.json({ error: "Nicht angemeldet." }, { status: 401 });
     }
 
     let providerId: string | undefined;
@@ -24,6 +33,9 @@ export default {
     if (!providerId || typeof providerId !== "string") {
       return Response.json({ error: "'providerId' ist erforderlich." }, { status: 400 });
     }
+
+    const allowed = await checkRateLimit(ctx.supabaseAdmin, userId, "movie-get", RATE_LIMIT, RATE_LIMIT_WINDOW_MINUTES);
+    if (!allowed) return rateLimitResponse();
 
     try {
       const movie = await getMovie(providerId);
