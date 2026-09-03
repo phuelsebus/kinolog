@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { Image } from 'expo-image';
+import { memo, useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   Pressable,
   RefreshControl,
   StyleSheet,
@@ -17,6 +17,46 @@ import { radius, spacing } from '../../src/theme/spacing';
 import { useTheme } from '../../src/theme/ThemeContext';
 import type { ThemeColors } from '../../src/theme/colors';
 import type { WatchlistItemWithMovie } from '../../src/types/models';
+
+interface WatchlistRowProps {
+  item: WatchlistItemWithMovie;
+  styles: ReturnType<typeof createStyles>;
+  colors: ThemeColors;
+  onSelect: (item: WatchlistItemWithMovie) => void;
+  onRemove: (id: string) => void;
+}
+
+// Als eigene, memoisierte Komponente ausgelagert - gleicher Grund wie
+// VisitRow in (tabs)/index.tsx: verhindert unnoetiges Re-Rendern aller
+// sichtbaren Zeilen bei jedem Screen-Render.
+const WatchlistRow = memo(function WatchlistRow({ item, styles, colors, onSelect, onRemove }: WatchlistRowProps) {
+  return (
+    <SwipeableRow
+      onDelete={() => onRemove(item.id)}
+      confirmTitle="Aus Watchlist entfernen?"
+      confirmMessage={`"${item.movie.title}" wird von deiner Watchlist entfernt.`}
+    >
+      <Pressable style={({ pressed }) => [styles.row, pressed && styles.rowPressed]} onPress={() => onSelect(item)}>
+        {item.movie.posterUrl ? (
+          <Image source={{ uri: item.movie.posterUrl }} style={styles.poster} />
+        ) : (
+          <View style={[styles.poster, styles.posterPlaceholder]} />
+        )}
+        <View style={styles.info}>
+          <Text style={styles.movieTitle}>{item.movie.title}</Text>
+          {item.movie.releaseDate ? <Text style={styles.meta}>{item.movie.releaseDate.slice(0, 4)}</Text> : null}
+        </View>
+        <Pressable
+          hitSlop={8}
+          onPress={() => router.push({ pathname: '/movie/[id]', params: { id: item.movie.id } })}
+          style={styles.iconButton}
+        >
+          <Ionicons name="film-outline" size={18} color={colors.textSecondary} />
+        </Pressable>
+      </Pressable>
+    </SwipeableRow>
+  );
+});
 
 // Watchlist (getrennt von der Bibliothek/cinema_visits): Filme, die der
 // Nutzer noch sehen moechte. Antippen -> Kinobesuch dafuer eintragen
@@ -51,16 +91,16 @@ export default function WatchlistScreen() {
     }, [loadItems])
   );
 
-  async function handleRemove(id: string) {
+  const handleRemove = useCallback(async (id: string) => {
     try {
       await watchlistService.remove(id);
       setItems((current) => current.filter((item) => item.id !== id));
     } catch {
       setError('Eintrag konnte nicht entfernt werden.');
     }
-  }
+  }, []);
 
-  function handleSelect(item: WatchlistItemWithMovie) {
+  const handleSelect = useCallback((item: WatchlistItemWithMovie) => {
     router.push({
       pathname: '/new-visit',
       params: {
@@ -70,7 +110,14 @@ export default function WatchlistScreen() {
         watchlistItemId: item.id,
       },
     });
-  }
+  }, []);
+
+  const renderWatchlistItem = useCallback(
+    ({ item }: { item: WatchlistItemWithMovie }) => (
+      <WatchlistRow item={item} styles={styles} colors={colors} onSelect={handleSelect} onRemove={handleRemove} />
+    ),
+    [styles, colors, handleSelect, handleRemove]
+  );
 
   if (loading) {
     return (
@@ -100,37 +147,7 @@ export default function WatchlistScreen() {
             </Text>
           </View>
         }
-        renderItem={({ item }) => (
-          <SwipeableRow
-            onDelete={() => handleRemove(item.id)}
-            confirmTitle="Aus Watchlist entfernen?"
-            confirmMessage={`"${item.movie.title}" wird von deiner Watchlist entfernt.`}
-          >
-            <Pressable
-              style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
-              onPress={() => handleSelect(item)}
-            >
-              {item.movie.posterUrl ? (
-                <Image source={{ uri: item.movie.posterUrl }} style={styles.poster} />
-              ) : (
-                <View style={[styles.poster, styles.posterPlaceholder]} />
-              )}
-              <View style={styles.info}>
-                <Text style={styles.movieTitle}>{item.movie.title}</Text>
-                {item.movie.releaseDate ? (
-                  <Text style={styles.meta}>{item.movie.releaseDate.slice(0, 4)}</Text>
-                ) : null}
-              </View>
-              <Pressable
-                hitSlop={8}
-                onPress={() => router.push({ pathname: '/movie/[id]', params: { id: item.movie.id } })}
-                style={styles.iconButton}
-              >
-                <Ionicons name="film-outline" size={18} color={colors.textSecondary} />
-              </Pressable>
-            </Pressable>
-          </SwipeableRow>
-        )}
+        renderItem={renderWatchlistItem}
       />
 
       <Pressable
@@ -147,7 +164,13 @@ export default function WatchlistScreen() {
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
-    centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
+    centered: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: spacing.xl,
+      backgroundColor: colors.background,
+    },
     // paddingBottom grosszuegig, damit die letzte Zeile ueber den
     // schwebenden "Film merken"-Button hinaus scrollbar ist.
     list: { padding: spacing.lg, paddingBottom: spacing.xxl * 3, gap: spacing.md },

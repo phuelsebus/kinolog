@@ -1,6 +1,7 @@
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Image } from 'expo-image';
 import { useMemo } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import VisitForm from '../src/components/VisitForm';
 import { cinemaVisitService } from '../src/services/CinemaVisitService';
 import { saveTicketExtraction, type ScanHandoff } from '../src/services/TicketScanner';

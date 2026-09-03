@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
+import { Image } from 'expo-image';
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Image, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '../../src/context/AuthContext';
 import { getAvatarSignedUrl, uploadAvatarImage } from '../../src/lib/avatarImages';
 import { profileService } from '../../src/services/ProfileService';
@@ -110,7 +111,7 @@ export default function ProfileScreen() {
           {uploadingAvatar ? (
             <ActivityIndicator color={colors.accent} />
           ) : avatarSignedUrl ? (
-            <Image source={{ uri: avatarSignedUrl }} style={styles.avatarImage} resizeMode="cover" />
+            <Image source={{ uri: avatarSignedUrl }} style={styles.avatarImage} contentFit="cover" />
           ) : (
             <Ionicons name="person" size={28} color={colors.accent} />
           )}

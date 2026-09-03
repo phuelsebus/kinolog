@@ -28,6 +28,10 @@ export default function TabsLayout() {
         headerStyle: { backgroundColor: colors.surface },
         headerTintColor: colors.textPrimary,
         headerShadowVisible: false,
+        // Ohne dies faellt React Navigation beim Tab-Wechsel kurz auf einen
+        // weissen Default-Hintergrund zurueck, bevor der Screen-Inhalt
+        // rendert - auf langsameren Geraeten sichtbar als weisses Aufblitzen.
+        sceneStyle: { backgroundColor: colors.background },
         tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.textSecondary,

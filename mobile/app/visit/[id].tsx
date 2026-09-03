@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { Image } from 'expo-image';
 import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import MovieDetails from '../../src/components/MovieDetails';
 import { getTicketImageSignedUrl } from '../../src/lib/ticketImages';
 import { cinemaVisitService } from '../../src/services/CinemaVisitService';
@@ -155,7 +156,7 @@ export default function CinemaVisitDetailScreen() {
       {ticketImageUrl ? (
         <>
           <Text style={styles.sectionTitle}>Ticketfoto</Text>
-          <Image source={{ uri: ticketImageUrl }} style={styles.ticketImage} resizeMode="contain" />
+          <Image source={{ uri: ticketImageUrl }} style={styles.ticketImage} contentFit="contain" />
         </>
       ) : null}
 

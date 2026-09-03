@@ -1,10 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
+import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Image,
   Pressable,
   StyleSheet,
   Text,
@@ -144,7 +144,7 @@ export default function ScanTicketScreen() {
           <Image
             source={{ uri: imageUri }}
             style={styles.preview}
-            resizeMode="contain"
+            contentFit="contain"
           />
 
           {error ? <Text style={styles.error}>{error}</Text> : null}

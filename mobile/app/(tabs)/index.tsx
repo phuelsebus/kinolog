@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { Image } from 'expo-image';
+import { memo, useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   Modal,
   Pressable,
   RefreshControl,
@@ -98,6 +98,45 @@ function sortVisits(visits: CinemaVisitWithDetails[], sort: SortState): CinemaVi
   }
 }
 
+interface VisitRowProps {
+  item: CinemaVisitWithDetails;
+  styles: ReturnType<typeof createStyles>;
+  ratingColor: string;
+  onPress: (item: CinemaVisitWithDetails) => void;
+  onDelete: (item: CinemaVisitWithDetails) => void;
+}
+
+// Als eigene, memoisierte Komponente ausgelagert (statt eines inline
+// renderItem): FlatList kann dadurch pro Zeile echtes React.memo-Bailout
+// nutzen - ohne das wuerde jeder Tastendruck in der Suche/jeder Sortier-
+// Wechsel (aendert nur searchQuery/sort, nicht die Zeilendaten selbst) alle
+// sichtbaren Zeilen neu rendern, da ein inline renderItem bei jedem Render
+// von LibraryScreen eine neue Funktionsreferenz erzeugt.
+const VisitRow = memo(function VisitRow({ item, styles, ratingColor, onPress, onDelete }: VisitRowProps) {
+  return (
+    <SwipeableRow
+      onDelete={() => onDelete(item)}
+      confirmTitle="Kinobesuch löschen?"
+      confirmMessage={`"${item.movie.title}" wird unwiderruflich aus deiner Bibliothek entfernt.`}
+    >
+      <Pressable style={({ pressed }) => [styles.row, pressed && styles.rowPressed]} onPress={() => onPress(item)}>
+        {item.movie.posterUrl ? (
+          <Image source={{ uri: item.movie.posterUrl }} style={styles.poster} />
+        ) : (
+          <View style={[styles.poster, styles.posterPlaceholder]} />
+        )}
+        <View style={styles.info}>
+          <Text style={styles.movieTitle}>{item.movie.title}</Text>
+          <Text style={styles.meta}>
+            {formatDate(item.watchedAt)} · {item.cinema.name}
+          </Text>
+          <StarRating rating={item.rating} color={ratingColor} />
+        </View>
+      </Pressable>
+    </SwipeableRow>
+  );
+});
+
 // Bibliothek (idee.md Abschnitt 8): chronologische Liste aller Kinobesuche
 // mit Poster, Filmtitel, Datum, Kino, Bewertung.
 export default function LibraryScreen() {
@@ -116,14 +155,18 @@ export default function LibraryScreen() {
     [visits, searchQuery, sort]
   );
 
-  async function handleDeleteVisit(visit: CinemaVisitWithDetails) {
+  const handleDeleteVisit = useCallback(async (visit: CinemaVisitWithDetails) => {
     try {
       await cinemaVisitService.deleteVisit(visit.id, visit.ticketImageUrl);
       setVisits((current) => current.filter((v) => v.id !== visit.id));
     } catch {
       setError('Kinobesuch konnte nicht gelöscht werden.');
     }
-  }
+  }, []);
+
+  const handleOpenVisit = useCallback((visit: CinemaVisitWithDetails) => {
+    router.push({ pathname: '/visit/[id]', params: { id: visit.id } });
+  }, []);
 
   function handleSelectSort(mode: SortMode) {
     setSort((current) =>
@@ -132,6 +175,19 @@ export default function LibraryScreen() {
         : { mode, direction: DEFAULT_DIRECTION[mode] }
     );
   }
+
+  const renderVisitItem = useCallback(
+    ({ item }: { item: CinemaVisitWithDetails }) => (
+      <VisitRow
+        item={item}
+        styles={styles}
+        ratingColor={colors.rating}
+        onPress={handleOpenVisit}
+        onDelete={handleDeleteVisit}
+      />
+    ),
+    [styles, colors.rating, handleOpenVisit, handleDeleteVisit]
+  );
 
   const loadVisits = useCallback(async (isRefresh: boolean) => {
     if (isRefresh) setRefreshing(true);
@@ -238,6 +294,7 @@ export default function LibraryScreen() {
       <FlatList
         data={visibleVisits}
         keyExtractor={(item) => item.id}
+        keyboardShouldPersistTaps="handled"
         contentContainerStyle={visibleVisits.length === 0 ? styles.emptyList : styles.list}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={() => loadVisits(true)} tintColor={colors.accent} />
@@ -260,31 +317,7 @@ export default function LibraryScreen() {
             )}
           </View>
         }
-        renderItem={({ item }) => (
-          <SwipeableRow
-            onDelete={() => handleDeleteVisit(item)}
-            confirmTitle="Kinobesuch löschen?"
-            confirmMessage={`"${item.movie.title}" wird unwiderruflich aus deiner Bibliothek entfernt.`}
-          >
-            <Pressable
-              style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
-              onPress={() => router.push({ pathname: '/visit/[id]', params: { id: item.id } })}
-            >
-              {item.movie.posterUrl ? (
-                <Image source={{ uri: item.movie.posterUrl }} style={styles.poster} />
-              ) : (
-                <View style={[styles.poster, styles.posterPlaceholder]} />
-              )}
-              <View style={styles.info}>
-                <Text style={styles.movieTitle}>{item.movie.title}</Text>
-                <Text style={styles.meta}>
-                  {formatDate(item.watchedAt)} · {item.cinema.name}
-                </Text>
-                <StarRating rating={item.rating} color={colors.rating} />
-              </View>
-            </Pressable>
-          </SwipeableRow>
-        )}
+        renderItem={renderVisitItem}
       />
 
       <Pressable
@@ -308,7 +341,13 @@ export default function LibraryScreen() {
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
-    centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
+    centered: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: spacing.xl,
+      backgroundColor: colors.background,
+    },
     // paddingBottom grosszuegig, damit die letzten Zeilen ueber die zwei
     // schwebenden Buttons (FAB "Kinobesuch" + Scan-FAB) hinaus scrollbar
     // sind - sonst liegen deren Wisch-Aktionen dauerhaft unter den Buttons.

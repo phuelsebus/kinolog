@@ -1,9 +1,9 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Image } from 'expo-image';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   Pressable,
   StyleSheet,
   Text,
@@ -32,6 +32,46 @@ function parseScanHandoff(raw: string | undefined): ScanHandoff | null {
 // TMDB-Request raus (unnoetig viele Anfragen, Rate-Limit-Risiko).
 const MIN_QUERY_LENGTH = 2;
 const DEBOUNCE_MS = 400;
+
+interface SearchResultRowProps {
+  item: MovieSearchResult;
+  styles: ReturnType<typeof createStyles>;
+  colors: ThemeColors;
+  disabled: boolean;
+  selecting: boolean;
+  onSelect: (item: MovieSearchResult) => void;
+}
+
+// Als eigene, memoisierte Komponente ausgelagert - gleicher Grund wie
+// VisitRow in (tabs)/index.tsx: ein inline renderItem wuerde bei jedem
+// Tastendruck waehrend der Hotsearch-Eingabe alle sichtbaren Zeilen neu rendern.
+const SearchResultRow = memo(function SearchResultRow({
+  item,
+  styles,
+  colors,
+  disabled,
+  selecting,
+  onSelect,
+}: SearchResultRowProps) {
+  return (
+    <Pressable
+      style={({ pressed }) => [styles.resultRow, pressed && styles.resultRowPressed]}
+      onPress={() => onSelect(item)}
+      disabled={disabled}
+    >
+      {item.posterUrl ? (
+        <Image source={{ uri: item.posterUrl }} style={styles.poster} />
+      ) : (
+        <View style={[styles.poster, styles.posterPlaceholder]} />
+      )}
+      <View style={styles.resultInfo}>
+        <Text style={styles.resultTitle}>{item.title}</Text>
+        {item.releaseDate ? <Text style={styles.resultYear}>{item.releaseDate.slice(0, 4)}</Text> : null}
+      </View>
+      {selecting ? <ActivityIndicator color={colors.accent} /> : null}
+    </Pressable>
+  );
+});
 
 // Manuelle Filmsuche UI (idee.md: "Film-Suche über TMDB"). Ist auch der
 // gemeinsame zweite Schritt des Ticket-Scan-Flows (scan-ticket.tsx): kommt
@@ -99,45 +139,62 @@ export default function SearchMovieScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
-  async function handleSelect(result: MovieSearchResult) {
-    setSelectingId(result.providerId);
-    setError(null);
-    try {
-      const movie = await tmdbMovieProvider.getMovie(result.providerId);
-      if (mode === 'watchlist') {
-        await watchlistService.add(movie.id);
-        router.back();
-        return;
+  const handleSelect = useCallback(
+    async (result: MovieSearchResult) => {
+      setSelectingId(result.providerId);
+      setError(null);
+      try {
+        const movie = await tmdbMovieProvider.getMovie(result.providerId);
+        if (mode === 'watchlist') {
+          await watchlistService.add(movie.id);
+          router.back();
+          return;
+        }
+        if (editVisitId) {
+          // Rueckkehr zu einer bereits offenen edit-visit-Instanz (siehe
+          // edit-visit.tsx "Film ändern") statt eines neuen Stack-Eintrags.
+          router.dismissTo({
+            pathname: '/edit-visit',
+            params: {
+              visitId: editVisitId,
+              movieId: movie.id,
+              movieTitle: movie.title,
+              moviePosterUrl: movie.posterUrl ?? '',
+            },
+          });
+        } else {
+          router.push({
+            pathname: '/new-visit',
+            params: {
+              movieId: movie.id,
+              movieTitle: movie.title,
+              moviePosterUrl: movie.posterUrl ?? '',
+              ...(scan ? { scan } : {}),
+            },
+          });
+        }
+      } catch {
+        setError('Filmdaten konnten nicht geladen werden. Bitte versuche es erneut.');
+      } finally {
+        setSelectingId(null);
       }
-      if (editVisitId) {
-        // Rueckkehr zu einer bereits offenen edit-visit-Instanz (siehe
-        // edit-visit.tsx "Film ändern") statt eines neuen Stack-Eintrags.
-        router.dismissTo({
-          pathname: '/edit-visit',
-          params: {
-            visitId: editVisitId,
-            movieId: movie.id,
-            movieTitle: movie.title,
-            moviePosterUrl: movie.posterUrl ?? '',
-          },
-        });
-      } else {
-        router.push({
-          pathname: '/new-visit',
-          params: {
-            movieId: movie.id,
-            movieTitle: movie.title,
-            moviePosterUrl: movie.posterUrl ?? '',
-            ...(scan ? { scan } : {}),
-          },
-        });
-      }
-    } catch {
-      setError('Filmdaten konnten nicht geladen werden. Bitte versuche es erneut.');
-    } finally {
-      setSelectingId(null);
-    }
-  }
+    },
+    [mode, editVisitId, scan, router]
+  );
+
+  const renderResultItem = useCallback(
+    ({ item }: { item: MovieSearchResult }) => (
+      <SearchResultRow
+        item={item}
+        styles={styles}
+        colors={colors}
+        disabled={selectingId !== null}
+        selecting={selectingId === item.providerId}
+        onSelect={handleSelect}
+      />
+    ),
+    [styles, colors, selectingId, handleSelect]
+  );
 
   return (
     <View style={styles.container}>
@@ -175,26 +232,8 @@ export default function SearchMovieScreen() {
         data={results}
         keyExtractor={(item) => item.providerId}
         contentContainerStyle={styles.list}
-        renderItem={({ item }) => (
-          <Pressable
-            style={({ pressed }) => [styles.resultRow, pressed && styles.resultRowPressed]}
-            onPress={() => handleSelect(item)}
-            disabled={selectingId !== null}
-          >
-            {item.posterUrl ? (
-              <Image source={{ uri: item.posterUrl }} style={styles.poster} />
-            ) : (
-              <View style={[styles.poster, styles.posterPlaceholder]} />
-            )}
-            <View style={styles.resultInfo}>
-              <Text style={styles.resultTitle}>{item.title}</Text>
-              {item.releaseDate ? (
-                <Text style={styles.resultYear}>{item.releaseDate.slice(0, 4)}</Text>
-              ) : null}
-            </View>
-            {selectingId === item.providerId ? <ActivityIndicator color={colors.accent} /> : null}
-          </Pressable>
-        )}
+        keyboardShouldPersistTaps="handled"
+        renderItem={renderResultItem}
       />
     </View>
   );

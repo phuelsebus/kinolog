@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Image } from 'expo-image';
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import VisitForm from '../src/components/VisitForm';
 import { cinemaVisitService } from '../src/services/CinemaVisitService';
 import { radius, spacing } from '../src/theme/spacing';
