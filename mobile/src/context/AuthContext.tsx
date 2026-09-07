@@ -1,7 +1,10 @@
 import type { Session } from '@supabase/supabase-js';
+import { getQueryParams } from 'expo-auth-session/build/QueryParams';
+import { router } from 'expo-router';
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Linking } from 'react-native';
 import { supabase } from '../lib/supabase';
-import { signInWithOAuth, type OAuthProvider } from '../lib/oauth';
+import { signInWithOAuth, redirectTo, type OAuthProvider } from '../lib/oauth';
 
 interface AuthContextValue {
   session: Session | null;
@@ -15,6 +18,8 @@ interface AuthContextValue {
   signInWithProvider: (provider: OAuthProvider) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   deleteAccount: () => Promise<{ error: string | null }>;
+  sendPasswordReset: (email: string) => Promise<{ error: string | null }>;
+  updatePassword: (newPassword: string) => Promise<{ error: string | null }>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -39,6 +44,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => subscription.subscription.unsubscribe();
+  }, []);
+
+  // Faengt den Passwort-Reset-Link aus der E-Mail ab: das Recovery-Template
+  // (supabase/templates/recovery.html) verlinkt direkt auf redirectTo mit
+  // einem TokenHash im Query-String (siehe Kommentar dort - der Supabase-
+  // Standardlink ueber "{{ .SiteURL }}/auth/v1/verify" wuerde ins Leere
+  // laufen, da site_url bei uns das App-Schema ist, kein Webserver). Anders
+  // als beim OAuth-Button-Tap (der die Rueckkehr synchron ueber
+  // WebBrowser.openAuthSessionAsync abfaengt) kann dieser Link jederzeit von
+  // außen (E-Mail-App) kommen, auch bei kalt gestarteter App - daher ein
+  // app-weiter Linking-Listener statt eines lokalen Callbacks in einem Screen.
+  useEffect(() => {
+    async function handleRecoveryUrl(url: string | null) {
+      if (!url || !url.startsWith(redirectTo)) return;
+      const { params, errorCode } = getQueryParams(url);
+      if (errorCode || params.type !== 'recovery') return;
+
+      const token_hash = params.token_hash;
+      if (!token_hash) return;
+
+      const { error } = await supabase.auth.verifyOtp({ token_hash, type: 'recovery' });
+      if (!error) router.push('/(auth)/reset-password');
+    }
+
+    Linking.getInitialURL().then(handleRecoveryUrl);
+    const subscription = Linking.addEventListener('url', ({ url }) => handleRecoveryUrl(url));
+    return () => subscription.remove();
   }, []);
 
   const value = useMemo<AuthContextValue>(
@@ -68,6 +100,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (error) return { error: error.message };
         await supabase.auth.signOut();
         return { error: null };
+      },
+      async sendPasswordReset(email) {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+        // Supabase verraet bewusst nicht, ob die E-Mail einem Konto gehoert
+        // (Schutz vor User-Enumeration) - error ist hier nur bei echten
+        // Problemen gesetzt (z.B. Netzwerk), nicht bei "unbekannte E-Mail".
+        return { error: error?.message ?? null };
+      },
+      async updatePassword(newPassword) {
+        const { error } = await supabase.auth.updateUser({ password: newPassword });
+        return { error: error?.message ?? null };
       },
     }),
     [session, loading]

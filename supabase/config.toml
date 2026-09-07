@@ -255,6 +255,19 @@ pass = "env(RESEND_SMTP_PASS)"
 admin_email = "noreply@mail.kinoliebeapp.de"
 sender_name = "KinoLiebe"
 
+# Eigenes Recovery-Template noetig: Supabases Standard-Link fuehrt ueber
+# "{{ .SiteURL }}/auth/v1/verify?...", einen HTTP-Zwischenschritt, der die
+# Tokens serverseitig aufloest und erst danach weiterleitet. Da site_url bei
+# uns bewusst das App-Schema "kinolog://" ist (siehe [auth] oben, keine
+# eigene Website vorhanden), gibt es dafuer keinen Webserver - der Link
+# wuerde direkt (und falsch) in der App auf einem Pfad landen, den
+# AuthContext.tsx nicht kennt. Stattdessen verlinken wir hier direkt auf
+# redirectTo (= "kinolog://auth-callback") mit dem TokenHash im Query-String;
+# der Client loest ihn selbst per supabase.auth.verifyOtp() auf.
+[auth.email.template.recovery]
+subject = "Passwort zurücksetzen"
+content_path = "./supabase/templates/recovery.html"
+
 # Uncomment to customize email template
 # [auth.email.template.invite]
 # subject = "You have been invited"
@@ -519,3 +532,9 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/legal-imprint/deno.json"
 entrypoint = "./functions/legal-imprint/index.ts"
+
+[functions.auth-redirect]
+enabled = true
+verify_jwt = false
+import_map = "./functions/auth-redirect/deno.json"
+entrypoint = "./functions/auth-redirect/index.ts"

@@ -9,7 +9,10 @@ WebBrowser.maybeCompleteAuthSession();
 
 export type OAuthProvider = 'google' | 'discord';
 
-const redirectTo = makeRedirectUri({ scheme: 'kinolog', path: 'auth-callback' });
+// Auch von AuthContext.tsx fuer den Passwort-Reset-Link genutzt - Supabase
+// leitet nach Klick auf den E-Mail-Link an dieselbe Adresse zurueck wie beim
+// OAuth-Login, ist also bereits in additional_redirect_urls freigegeben.
+export const redirectTo = makeRedirectUri({ scheme: 'kinolog', path: 'auth-callback' });
 
 /**
  * Google-/Discord-Login via Supabase Auth OAuth-Flow. Oeffnet den Login des
