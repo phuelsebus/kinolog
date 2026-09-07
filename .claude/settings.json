@@ -1,0 +1,29 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/type-check.cjs",
+            "timeout": 60,
+            "statusMessage": "Type-checking mobile/..."
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Read|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/block-env-access.cjs",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
