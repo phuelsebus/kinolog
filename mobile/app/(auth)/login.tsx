@@ -136,6 +136,10 @@ export default function LoginScreen() {
           onFocus={scrollToEnd}
         />
 
+        <Link href="/(auth)/forgot-password" style={styles.forgotLink}>
+          Passwort vergessen?
+        </Link>
+
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
         <Pressable
@@ -235,6 +239,7 @@ function createStyles(colors: ThemeColors) {
     },
     buttonPressed: { opacity: 0.85 },
     buttonText: { color: colors.accentText, fontSize: 16, fontWeight: '600' },
+    forgotLink: { alignSelf: 'flex-end', color: colors.accent, fontSize: 13, fontWeight: '500' },
     error: { color: colors.error, textAlign: 'center' },
     dividerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.xl },
     dividerLine: { flex: 1, height: 1, backgroundColor: colors.border },
