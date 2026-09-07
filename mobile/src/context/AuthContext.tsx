@@ -46,23 +46,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.subscription.unsubscribe();
   }, []);
 
-  // Faengt den Passwort-Reset-Link aus der E-Mail ab: Supabase leitet nach
-  // Klick an dieselbe redirectTo-Adresse wie beim OAuth-Login zurueck, aber
-  // mit "type=recovery" im Query-String. Anders als beim OAuth-Button-Tap
-  // (der die Rueckkehr synchron ueber WebBrowser.openAuthSessionAsync
-  // abfaengt) kann dieser Link jederzeit von außen (E-Mail-App) kommen,
-  // auch bei kalt gestarteter App - daher ein app-weiter Linking-Listener
-  // statt eines lokalen Callbacks in einem Screen.
+  // Faengt den Passwort-Reset-Link aus der E-Mail ab: das Recovery-Template
+  // (supabase/templates/recovery.html) verlinkt direkt auf redirectTo mit
+  // einem TokenHash im Query-String (siehe Kommentar dort - der Supabase-
+  // Standardlink ueber "{{ .SiteURL }}/auth/v1/verify" wuerde ins Leere
+  // laufen, da site_url bei uns das App-Schema ist, kein Webserver). Anders
+  // als beim OAuth-Button-Tap (der die Rueckkehr synchron ueber
+  // WebBrowser.openAuthSessionAsync abfaengt) kann dieser Link jederzeit von
+  // außen (E-Mail-App) kommen, auch bei kalt gestarteter App - daher ein
+  // app-weiter Linking-Listener statt eines lokalen Callbacks in einem Screen.
   useEffect(() => {
     async function handleRecoveryUrl(url: string | null) {
       if (!url || !url.startsWith(redirectTo)) return;
       const { params, errorCode } = getQueryParams(url);
       if (errorCode || params.type !== 'recovery') return;
 
-      const { access_token, refresh_token } = params;
-      if (!access_token || !refresh_token) return;
+      const token_hash = params.token_hash;
+      if (!token_hash) return;
 
-      const { error } = await supabase.auth.setSession({ access_token, refresh_token });
+      const { error } = await supabase.auth.verifyOtp({ token_hash, type: 'recovery' });
       if (!error) router.push('/(auth)/reset-password');
     }
 

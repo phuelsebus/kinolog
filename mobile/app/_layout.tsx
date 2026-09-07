@@ -21,6 +21,7 @@ function ThemedStack() {
         }}
       >
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="auth-callback" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="visit/[id]" options={{ title: 'Kinobesuch' }} />
         <Stack.Screen name="movie/[id]" options={{ title: 'Film' }} />
