@@ -156,7 +156,13 @@ max_indexes = 5
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
-site_url = "http://127.0.0.1:3000"
+# KinoLiebe hat keine eigene Website - site_url zeigt deshalb bewusst auf das
+# eigene App-Schema (offizielle Supabase-Empfehlung fuer reine Mobile-Apps,
+# siehe https://supabase.com/docs/guides/auth/native-mobile-deep-linking).
+# War vorher der lokale 127.0.0.1:3000-Platzhalter - dadurch versuchten
+# E-Mail-Links (z.B. Passwort-Reset) eine lokale Dev-Adresse zu oeffnen statt
+# die App, was erst beim tatsaechlichen Nutzen des Reset-Flows auffiel.
+site_url = "kinolog://"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
