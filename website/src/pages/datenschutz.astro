@@ -1,0 +1,67 @@
+---
+import LegalLayout from '../layouts/LegalLayout.astro';
+---
+
+<LegalLayout title="Datenschutzerklärung" heading="Datenschutzerklärung">
+  <h2>1. Verantwortlicher</h2>
+  <p>
+    Pascal Hülsebus<br />
+    E-Mail: <a href="mailto:phuelsebusxx@gmail.com">phuelsebusxx@gmail.com</a><br />
+    (siehe auch <a href="/impressum">Impressum</a>)
+  </p>
+
+  <h2>2. Welche Daten wir verarbeiten</h2>
+  <p>
+    • Account: E-Mail-Adresse, Anzeigename, Profilbild (optional), Passwort (verschlüsselt gespeichert)<br />
+    • Kinobesuche: Filmdaten, Kino, Datum/Uhrzeit, Saal/Reihe/Sitz, Preis, Bewertung, Notizen<br />
+    • Ticketfotos: von dir freiwillig hochgeladene Bilder deiner Kinokarten<br />
+    • Kino-Standortdaten: Koordinaten von Kinos (keine Standort-/Bewegungsdaten von dir selbst)<br />
+    • Warteliste: falls du dich auf dieser Website für die Warteliste einträgst, nur deine E-Mail-Adresse
+  </p>
+
+  <h2>3. Zweck der Verarbeitung</h2>
+  <p>
+    Bereitstellung der App-Funktionen: Anmeldung, Speichern und Anzeigen deiner persönlichen
+    Kinobesuch-Bibliothek. Die Warteliste dient ausschließlich dazu, dich über den Play-Store-Start zu
+    informieren.
+  </p>
+
+  <h2>4. Rechtsgrundlage</h2>
+  <p>
+    Art. 6 Abs. 1 lit. b DSGVO (Erfüllung des Nutzungsvertrags) bzw. Art. 6 Abs. 1 lit. a DSGVO (Einwilligung
+    bei der Warteliste).
+  </p>
+
+  <h2>5. Empfänger / Auftragsverarbeiter</h2>
+  <p>
+    • Supabase Inc. – Hosting, Datenbank, Authentifizierung, Dateispeicher (Serverstandort EU/Paris)<br />
+    • The Movie Database (TMDB) – Filmsuche und Filmdaten<br />
+    • OpenAI – nur wenn du den Ticket-Scan nutzt: Analyse deines Ticketfotos zur Texterkennung<br />
+    • OpenStreetMap (Nominatim/Overpass) – nur bei der Kino-Suche: deine Sucheingabe wird übermittelt<br />
+    • Vercel Inc. – Hosting dieser Website
+  </p>
+
+  <h2>6. Speicherdauer</h2>
+  <p>
+    App-Daten werden gespeichert, bis du deinen Account löschst oder uns zur Löschung aufforderst.
+    Warteliste-Einträge werden gelöscht, sobald die App im Play Store verfügbar ist und die
+    Launch-Benachrichtigung verschickt wurde.
+  </p>
+
+  <h2>7. Deine Rechte</h2>
+  <p>
+    Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung,
+    Datenübertragbarkeit und Widerspruch (Art. 15–21 DSGVO) sowie ein Beschwerderecht bei einer
+    Datenschutz-Aufsichtsbehörde. Kontaktiere uns dafür unter
+    <a href="mailto:phuelsebusxx@gmail.com">phuelsebusxx@gmail.com</a>.
+  </p>
+
+  <h2>8. Konto löschen</h2>
+  <p>
+    Du kannst dein Konto jederzeit direkt in der App unter „Profil" → „Konto löschen" unwiderruflich löschen.
+    Alternativ (z.B. ohne App-Zugriff):
+    <a href="https://htnuvcdolvnnrbxmrryf.supabase.co/functions/v1/account-deletion"
+      >htnuvcdolvnnrbxmrryf.supabase.co/functions/v1/account-deletion</a
+    >
+  </p>
+</LegalLayout>

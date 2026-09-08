@@ -1,0 +1,37 @@
+---
+import Logo from './Logo.astro';
+const year = new Date().getFullYear();
+---
+
+<footer class="border-t border-white/5 px-6 py-14">
+  <div class="mx-auto flex max-w-6xl flex-col gap-10 md:flex-row md:items-start md:justify-between">
+    <div class="max-w-sm">
+      <Logo size={30} />
+      <p class="mt-4 text-sm leading-relaxed text-mist">
+        Jeder Kinobesuch, gesammelt an einem Ort. Ein kleines, unabhängiges Projekt aus Deutschland.
+      </p>
+    </div>
+
+    <div class="flex flex-col gap-3 text-sm text-mist">
+      <span class="font-semibold text-cream">Rechtliches</span>
+      <a href="/impressum" class="transition-colors hover:text-cream">Impressum</a>
+      <a href="/datenschutz" class="transition-colors hover:text-cream">Datenschutz</a>
+      <a href="/nutzungsbedingungen" class="transition-colors hover:text-cream">Nutzungsbedingungen</a>
+    </div>
+
+    <div class="flex flex-col gap-3 text-sm text-mist">
+      <span class="font-semibold text-cream">Kontakt</span>
+      <a href="mailto:phuelsebusxx@gmail.com" class="transition-colors hover:text-cream">
+        phuelsebusxx@gmail.com
+      </a>
+    </div>
+  </div>
+
+  <div class="mx-auto mt-10 max-w-6xl border-t border-white/5 pt-6 text-xs leading-relaxed text-mist/70">
+    <p>© {year} KinoLiebe.</p>
+    <p class="mt-1">
+      Filmdaten von TMDB. Dieses Produkt verwendet die TMDB API, wird aber nicht von TMDB gebilligt oder
+      zertifiziert. <a href="https://www.themoviedb.org/" class="underline hover:text-mist">themoviedb.org</a>
+    </p>
+  </div>
+</footer>

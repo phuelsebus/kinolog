@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+/*
+ * Markenfarben, aus mobile/assets/icon.png und
+ * kinoliebe-feature-graphic-1024x500.png gesampelt (siehe Plan) - keine neu
+ * erfundene Palette, sondern die bereits etablierte App-Identität.
+ */
+@theme {
+  --color-ink: #17150f; /* Hintergrund, fast schwarz, warm */
+  --color-glow: #2a1d0d; /* dunkelbraune Verlaufsflaeche */
+  --color-cream: #f7f3eb; /* helle Flaeche / Kartenhintergrund auf hellem Ticket */
+  --color-ember: #cc6600; /* Akzent-Orange */
+  --color-ember-light: #e8862a;
+  --color-mist: #c2beb7; /* Sekundaertext / Trennlinien */
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+html {
+  color-scheme: dark;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-ink);
+  color: var(--color-cream);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

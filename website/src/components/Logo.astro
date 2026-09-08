@@ -1,0 +1,36 @@
+---
+// Ticket-Icon als SVG nachgebaut (Formen/Farben aus mobile/assets/icon.png
+// gesampelt) - fuer scharfe Darstellung in jeder Groesse (Header, Hero,
+// Favicon-Export, OG-Image), da nur eine PNG-Quelle vorlag.
+interface Props {
+  size?: number;
+  withWordmark?: boolean;
+  class?: string;
+}
+
+const { size = 40, withWordmark = true, class: className = '' } = Astro.props;
+---
+
+<div class:list={['inline-flex items-center gap-3', className]}>
+  <svg
+    width={size}
+    height={size * 0.6}
+    viewBox="0 0 200 120"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    role="img"
+    aria-label="KinoLiebe Ticket-Icon"
+  >
+    <rect x="10" y="10" width="180" height="100" rx="18" fill="#F7F3EB" />
+    <circle cx="10" cy="60" r="15" fill="var(--page-bg, #17150F)" />
+    <circle cx="190" cy="60" r="15" fill="var(--page-bg, #17150F)" />
+    <rect x="48" y="38" width="104" height="13" rx="6.5" fill="#CC6600" />
+    <rect x="48" y="59" width="104" height="13" rx="6.5" fill="#C2BEB7" />
+    <rect x="48" y="80" width="64" height="13" rx="6.5" fill="#C2BEB7" />
+  </svg>
+  {
+    withWordmark && (
+      <span class="font-sans text-xl font-extrabold tracking-tight text-cream">KinoLiebe</span>
+    )
+  }
+</div>

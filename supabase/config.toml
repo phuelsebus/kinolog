@@ -538,3 +538,9 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/auth-redirect/deno.json"
 entrypoint = "./functions/auth-redirect/index.ts"
+
+[functions.waitlist-signup]
+enabled = true
+verify_jwt = false
+import_map = "./functions/waitlist-signup/deno.json"
+entrypoint = "./functions/waitlist-signup/index.ts"

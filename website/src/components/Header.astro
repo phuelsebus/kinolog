@@ -1,0 +1,24 @@
+---
+import Logo from './Logo.astro';
+---
+
+<header class="sticky top-0 z-50 border-b border-white/5 bg-ink/80 backdrop-blur-md">
+  <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+    <a href="/" class="shrink-0">
+      <Logo size={34} />
+    </a>
+
+    <nav class="hidden items-center gap-8 text-sm font-medium text-mist md:flex">
+      <a href="/#funktionen" class="transition-colors hover:text-cream">Funktionen</a>
+      <a href="/#design" class="transition-colors hover:text-cream">Design</a>
+      <a href="/#so-funktionierts" class="transition-colors hover:text-cream">So funktioniert's</a>
+    </nav>
+
+    <a
+      href="/#warteliste"
+      class="rounded-full bg-ember px-5 py-2.5 text-sm font-semibold text-cream transition-colors hover:bg-ember-light"
+    >
+      Warteliste
+    </a>
+  </div>
+</header>

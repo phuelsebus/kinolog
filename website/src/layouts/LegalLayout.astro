@@ -1,0 +1,19 @@
+---
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  title: string;
+  heading: string;
+}
+
+const { title, heading } = Astro.props;
+---
+
+<BaseLayout title={`${title} – KinoLiebe`} description={`${title} für die KinoLiebe App.`}>
+  <article class="mx-auto max-w-2xl px-6 py-16 md:py-24">
+    <h1 class="text-3xl font-extrabold tracking-tight text-cream">{heading}</h1>
+    <div class="prose-legal mt-8 text-mist [&_a]:text-ember [&_a]:underline [&_a]:underline-offset-2 [&_h2]:mt-8 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-cream [&_p]:mt-2 [&_p]:leading-relaxed">
+      <slot />
+    </div>
+  </article>
+</BaseLayout>

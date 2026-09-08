@@ -1,0 +1,114 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Hero from '../components/Hero.astro';
+import FeatureSection from '../components/FeatureSection.astro';
+import PaletteDemo from '../components/islands/PaletteDemo';
+import WaitlistForm from '../components/islands/WaitlistForm';
+
+import ticketScanScreenshot from '../assets/screenshots/ticket-scan.png';
+import watchlistScreenshot from '../assets/screenshots/watchlist.png';
+import wrappedScreenshot from '../assets/screenshots/wrapped.png';
+import paletteScreenshot from '../assets/screenshots/palette.png';
+
+const steps = [
+  {
+    title: 'Kino besuchen',
+    description: 'Wie immer – Popcorn, Trailer, große Leinwand. KinoLiebe braucht dich erst danach.',
+  },
+  {
+    title: 'Ticket scannen oder Film suchen',
+    description:
+      'Foto vom Ticket machen – KinoLiebe liest Kino, Datum, Saal und Sitz automatisch aus. Oder den Film einfach manuell eintragen.',
+  },
+  {
+    title: 'In der Bibliothek wiederfinden',
+    description: 'Durchsuchbar, mit Bewertung, Notiz und Originalticket – für immer griffbereit.',
+  },
+];
+---
+
+<BaseLayout
+  title="KinoLiebe – Jeder Kinobesuch, gesammelt an einem Ort"
+  description="KinoLiebe ist dein persönliches Kino-Tagebuch: Filme, Kinos, Bewertungen und Original-Tickets in einer durchsuchbaren Bibliothek."
+>
+  <Hero />
+
+  <section id="funktionen">
+    <FeatureSection
+      eyebrow="Kein Foto verloren"
+      title="Ticket fotografieren, Formular ist fertig"
+      description="Ein Foto deines Kinotickets genügt – KinoLiebe erkennt Kino, Datum, Uhrzeit, Saal, Reihe und Sitz automatisch und trägt sie fürs Formular ein. Den Rest ergänzt du in Sekunden."
+      screenshot={ticketScanScreenshot}
+      screenshotAlt="Vorausgefülltes Formular für einen Kinobesuch in KinoLiebe"
+    />
+
+    <FeatureSection
+      eyebrow="Nie wieder vergessen"
+      title="Watchlist für alles, was noch ansteht"
+      description="Film gehört, Trailer gesehen, noch nicht geschafft? Auf die Watchlist damit. Sobald du im Kino warst, wird daraus mit einem Tippen ein fertiger Bibliothekseintrag."
+      screenshot={watchlistScreenshot}
+      screenshotAlt="Watchlist-Ansicht in KinoLiebe"
+      reverse
+    />
+
+    <FeatureSection
+      eyebrow="Dein Kino-Jahr"
+      title="Der Jahresrückblick, den sonst niemand hat"
+      description="Wie viele Filme, wie viel Zeit im Kinosaal, welches Genre, welches Kino, wie viel ausgegeben – KinoLiebe rechnet es für dich zusammen, im Spotify-Wrapped-Stil."
+      screenshot={wrappedScreenshot}
+      screenshotAlt="Kino-Jahresrückblick in KinoLiebe"
+    />
+  </section>
+
+  <section id="design">
+    <FeatureSection
+      eyebrow="Deine Farbe, deine App"
+      title="Zehn Akzentfarben, ein Fingertipp"
+      description="Von Samtvorhang-Rot bis Schwarzweißfilm-Grau: Im Profil wählst du die Akzentfarbe, die zu dir passt – probier's gleich hier aus."
+      screenshot={paletteScreenshot}
+      screenshotAlt="Akzentfarben-Auswahl im KinoLiebe-Profil"
+      reverse
+    >
+      <PaletteDemo client:visible />
+    </FeatureSection>
+  </section>
+
+  <section id="so-funktionierts" class="mx-auto max-w-6xl px-6 py-20 md:py-28">
+    <div class="text-center" data-reveal>
+      <span class="font-mono text-xs font-medium uppercase tracking-[0.2em] text-ember">Ablauf</span>
+      <h2 class="mt-3 text-3xl font-extrabold tracking-tight text-cream md:text-4xl">So funktioniert's</h2>
+    </div>
+
+    <div class="mt-14 grid gap-8 md:grid-cols-3">
+      {
+        steps.map((step, index) => (
+          <div data-reveal class="rounded-2xl border border-white/10 bg-white/5 p-8">
+            <span class="font-mono text-sm font-semibold text-ember">{String(index + 1).padStart(2, '0')}</span>
+            <h3 class="mt-4 text-xl font-bold text-cream">{step.title}</h3>
+            <p class="mt-3 text-sm leading-relaxed text-mist">{step.description}</p>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-4xl px-6 py-16 text-center" data-reveal>
+    <h2 class="text-2xl font-bold text-cream md:text-3xl">Ehrlich gesagt</h2>
+    <p class="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-mist">
+      Keine Werbung, kein Tracking, keine verkauften Daten. Deine Kinobesuche liegen bei Supabase in der EU. Für
+      die Filmsuche wird TMDB angefragt, für den optionalen Ticket-Scan OpenAI – nur wenn du diese Funktionen
+      tatsächlich nutzt. Alles Weitere steht in der{' '}
+      <a href="/datenschutz" class="text-cream underline underline-offset-2">Datenschutzerklärung</a>.
+    </p>
+  </section>
+
+  <section class="mx-auto max-w-4xl px-6 py-20 text-center md:py-28" data-reveal>
+    <h2 class="text-3xl font-extrabold tracking-tight text-cream md:text-4xl">Bereit für dein Kino-Tagebuch?</h2>
+    <p class="mx-auto mt-4 max-w-md text-mist">
+      Trag dich ein und bekomm eine Nachricht, sobald KinoLiebe im Play Store startet.
+    </p>
+    <div class="mx-auto mt-8 max-w-md">
+      <WaitlistForm client:visible variant="section" />
+    </div>
+  </section>
+</BaseLayout>

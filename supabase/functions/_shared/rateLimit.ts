@@ -41,6 +41,44 @@ export async function checkRateLimit(
   return true;
 }
 
+// Gleiches Prinzip wie checkRateLimit, aber fuer oeffentliche Endpunkte ohne
+// eingeloggten Nutzer (z.B. das Warteliste-Formular der Marketing-Website) -
+// zaehlt ueber public.anon_api_usage/identifier statt
+// public.api_usage/user_id, da dort keine echte auth.users-Zeile existiert.
+// deno-lint-ignore no-explicit-any
+export async function checkAnonRateLimit(
+  supabaseAdmin: any,
+  identifier: string,
+  endpoint: string,
+  limit: number,
+  windowMinutes: number,
+): Promise<boolean> {
+  const windowStart = new Date(Date.now() - windowMinutes * 60_000).toISOString();
+
+  const { count, error } = await supabaseAdmin
+    .from("anon_api_usage")
+    .select("id", { count: "exact", head: true })
+    .eq("identifier", identifier)
+    .eq("endpoint", endpoint)
+    .gte("created_at", windowStart);
+
+  if (error) {
+    console.error(`Anon-Rate-Limit-Pruefung fuer ${endpoint} fehlgeschlagen:`, error);
+    return true;
+  }
+  if ((count ?? 0) >= limit) {
+    return false;
+  }
+
+  const { error: insertError } = await supabaseAdmin
+    .from("anon_api_usage")
+    .insert({ identifier, endpoint });
+  if (insertError) {
+    console.error(`Anon-Rate-Limit-Zaehlung fuer ${endpoint} fehlgeschlagen:`, insertError);
+  }
+  return true;
+}
+
 export function rateLimitResponse(): Response {
   return Response.json(
     { error: "Zu viele Anfragen. Bitte kurz warten und erneut versuchen." },

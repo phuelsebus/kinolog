@@ -1,0 +1,31 @@
+---
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import PhoneMockup from './PhoneMockup.astro';
+
+interface Props {
+  eyebrow: string;
+  title: string;
+  description: string;
+  screenshot: ImageMetadata;
+  screenshotAlt: string;
+  reverse?: boolean;
+  id?: string;
+}
+
+const { eyebrow, title, description, screenshot, screenshotAlt, reverse = false, id } = Astro.props;
+---
+
+<section id={id} class="mx-auto max-w-6xl px-6 py-20 md:py-28">
+  <div class:list={['grid items-center gap-12 md:grid-cols-2 md:gap-16', reverse && 'md:[&>*:first-child]:order-2']}>
+    <div data-reveal>
+      <PhoneMockup src={screenshot} alt={screenshotAlt} />
+    </div>
+    <div data-reveal>
+      <span class="font-mono text-xs font-medium uppercase tracking-[0.2em] text-ember">{eyebrow}</span>
+      <h2 class="mt-3 text-3xl font-extrabold tracking-tight text-cream md:text-4xl">{title}</h2>
+      <p class="mt-4 text-base leading-relaxed text-mist md:text-lg">{description}</p>
+      <slot />
+    </div>
+  </div>
+</section>
