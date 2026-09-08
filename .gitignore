@@ -44,12 +44,12 @@ yarn-error.*
 supabase/.branches
 supabase/.temp
 
-# Dokumentation nur lokal (Ausnahme: README.md sowie Claude-Code-Skills/
-# -Subagents bleiben im Repo, damit sie mit dem Team geteilt werden)
+# Dokumentation nur lokal (Ausnahme: README.md)
 *.md
 !/README.md
-!/.claude/skills/**/*.md
-!/.claude/agents/*.md
+
+# Claude-Code-Konfiguration (Hooks/Skills/Subagents) bleibt bewusst lokal
+/.claude/
 
 # graphify Analyse-Output (lokal generiert, kein Projekt-Source)
 graphify-out/
