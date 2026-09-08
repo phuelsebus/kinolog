@@ -4,6 +4,12 @@ KinoLiebe ist eine App für alle, die sich merken wollen, welche Filme sie im Ki
 gesehen haben und wo. Statt loser Kinokarten in der Schublade gibt es eine
 durchsuchbare Bibliothek mit Bewertung, Notiz und Originalticket.
 
+## Website
+
+[kinoliebeapp.de](https://kinoliebeapp.de) stellt die App vor und sammelt
+E-Mail-Adressen für eine Warteliste, solange KinoLiebe noch nicht im Play
+Store steht.
+
 ## Installation (Android)
 
 Aktuelle Builds gibt es auf der Expo-Projektseite:
