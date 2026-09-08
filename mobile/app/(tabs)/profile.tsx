@@ -3,19 +3,41 @@ import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useAuth } from '../../src/context/AuthContext';
 import { getAvatarSignedUrl, uploadAvatarImage } from '../../src/lib/avatarImages';
 import { profileService } from '../../src/services/ProfileService';
 import { radius, spacing } from '../../src/theme/spacing';
+import { PaletteMarble } from '../../src/theme/PaletteMarble';
 import { useTheme } from '../../src/theme/ThemeContext';
-import type { ThemeColors } from '../../src/theme/colors';
+import type { AccentPalette, ThemeColors } from '../../src/theme/colors';
+
+const PALETTE_COLUMNS = 5;
 
 export default function ProfileScreen() {
   const { session, signOut, deleteAccount } = useAuth();
-  const { colors } = useTheme();
+  const { colors, palettes, paletteId, setPaletteId } = useTheme();
+  const { width: windowWidth } = useWindowDimensions();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const email = session?.user.email ?? 'Unbekannt';
+
+  const paletteRows = useMemo(() => {
+    const rows: AccentPalette[][] = [];
+    for (let i = 0; i < palettes.length; i += PALETTE_COLUMNS) rows.push(palettes.slice(i, i + PALETTE_COLUMNS));
+    return rows;
+  }, [palettes]);
+
+  // Passt die Murmelgroesse an die verfuegbare Reihenbreite an, statt eine
+  // feste Groesse zu erzwingen - verhindert unschoenes Umbrechen (z.B. ein
+  // einzelnes Element in einer eigenen Zeile) auf schmalen oder sehr breiten
+  // Geraeten. horizontalChrome = container- + section-Padding (je spacing.lg
+  // auf beiden Seiten).
+  const marbleSize = useMemo(() => {
+    const horizontalChrome = spacing.lg * 4;
+    const available = windowWidth - horizontalChrome;
+    const raw = available / PALETTE_COLUMNS - spacing.sm;
+    return Math.min(52, Math.max(36, raw));
+  }, [windowWidth]);
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [avatarPath, setAvatarPath] = useState<string | null>(null);
   const [avatarSignedUrl, setAvatarSignedUrl] = useState<string | null>(null);
@@ -128,6 +150,26 @@ export default function ProfileScreen() {
         <Text style={styles.wrappedButtonText}>Kino-Jahresrückblick</Text>
         <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
       </Pressable>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>Design</Text>
+        <Text style={styles.paletteHint}>Akzentfarbe wählen</Text>
+        <View style={styles.paletteRows}>
+          {paletteRows.map((row, index) => (
+            <View key={index} style={styles.paletteRow}>
+              {row.map((palette) => (
+                <PaletteMarble
+                  key={palette.id}
+                  palette={palette}
+                  selected={palette.id === paletteId}
+                  onPress={() => setPaletteId(palette.id)}
+                  size={marbleSize}
+                />
+              ))}
+            </View>
+          ))}
+        </View>
+      </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionLabel}>Rechtliches</Text>
@@ -243,6 +285,9 @@ function createStyles(colors: ThemeColors) {
       gap: spacing.xs,
     },
     sectionLabel: { fontWeight: '600', color: colors.textPrimary, marginBottom: spacing.xs },
+    paletteHint: { color: colors.textSecondary, fontSize: 13, marginBottom: spacing.xs },
+    paletteRows: { gap: spacing.sm },
+    paletteRow: { flexDirection: 'row', justifyContent: 'space-between' },
     legalRow: {
       flexDirection: 'row',
       alignItems: 'center',
