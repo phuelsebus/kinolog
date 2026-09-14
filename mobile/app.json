@@ -39,7 +39,8 @@
         {
           "cameraPermission": "KinoLiebe benötigt Kamerazugriff, um Kinokarten zu fotografieren.",
           "microphonePermission": false,
-          "recordAudioAndroid": false
+          "recordAudioAndroid": false,
+          "barcodeScannerEnabled": false
         }
       ],
       [
