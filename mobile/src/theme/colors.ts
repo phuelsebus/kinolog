@@ -23,8 +23,14 @@ export const lightColors: ThemeColors = {
   textSecondary: '#6B6B76',
   accent: '#6D5EF5',
   accentText: '#FFFFFF',
-  rating: '#F5A623',
-  error: '#E5484D',
+  // rating/error im Light Mode bewusst dunkler als man fuer "Gold"/"Rot"
+  // zunaechst waehlen wuerde - die naheliegenden helleren Toene (#F5A623,
+  // #E5484D) fielen bei einer WCAG-Kontrastpruefung gegen background/surface
+  // klar durch (1.9:1 bzw. 3.7:1, noetig sind 4.5:1). Diese Werte liegen mit
+  // Puffer darueber (4.7/5.0 bzw. 5.2/5.6), Dark-Mode-Varianten unten waren
+  // bereits unauffaellig und blieben unveraendert.
+  rating: '#B45309',
+  error: '#C0342E',
 };
 
 export const darkColors: ThemeColors = {

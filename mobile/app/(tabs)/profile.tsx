@@ -44,6 +44,7 @@ export default function ProfileScreen() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -105,6 +106,11 @@ export default function ProfileScreen() {
   }
 
   async function handleSignOut() {
+    // Guard gegen Doppel-Tap, gleiches Muster wie bei den anderen
+    // async-getriggerten Buttons auf diesem Screen (Avatar-Upload,
+    // Konto-Löschung) - fehlte hier bisher als einziger Button.
+    if (signingOut) return;
+    setSigningOut(true);
     await signOut();
     router.replace('/(auth)/login');
   }
@@ -199,9 +205,16 @@ export default function ProfileScreen() {
       <Pressable
         style={({ pressed }) => [styles.signOutButton, pressed && styles.signOutButtonPressed]}
         onPress={handleSignOut}
+        disabled={signingOut}
       >
-        <Ionicons name="log-out-outline" size={18} color={colors.error} />
-        <Text style={styles.signOutText}>Abmelden</Text>
+        {signingOut ? (
+          <ActivityIndicator color={colors.error} />
+        ) : (
+          <>
+            <Ionicons name="log-out-outline" size={18} color={colors.error} />
+            <Text style={styles.signOutText}>Abmelden</Text>
+          </>
+        )}
       </Pressable>
 
       <View style={styles.dangerZone}>

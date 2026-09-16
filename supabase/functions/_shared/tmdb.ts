@@ -1,6 +1,7 @@
 // Duenne Abstraktion um die TMDB v3 API. Wird ausschliesslich serverseitig
 // (Supabase Edge Functions) verwendet - der TMDB_READ_ACCESS_TOKEN verlaesst
 // nie den Server (vgl. idee.md Abschnitt 3 "Movie Data").
+import { fetchWithRetry } from './fetchWithRetry.ts';
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p';
@@ -20,7 +21,7 @@ async function tmdbFetch<T>(path: string, params: Record<string, string> = {}): 
     url.searchParams.set(key, value);
   }
 
-  const response = await fetch(url, {
+  const response = await fetchWithRetry(url, {
     headers: {
       Authorization: getAuthHeader(),
       Accept: 'application/json',

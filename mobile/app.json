@@ -35,15 +35,6 @@
       "expo-status-bar",
       "expo-secure-store",
       [
-        "expo-camera",
-        {
-          "cameraPermission": "KinoLiebe benötigt Kamerazugriff, um Kinokarten zu fotografieren.",
-          "microphonePermission": false,
-          "recordAudioAndroid": false,
-          "barcodeScannerEnabled": false
-        }
-      ],
-      [
         "expo-image-picker",
         {
           "photosPermission": "KinoLiebe benötigt Zugriff auf deine Fotos, um Kinokarten oder ein Profilbild zu importieren.",

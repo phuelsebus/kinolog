@@ -4,6 +4,7 @@
 //
 // Die konkrete AI-Implementierung ist bewusst hinter extractTicketDataFromImage()
 // gekapselt, damit sie austauschbar bleibt (z.B. gegen einen reinen OCR-Provider).
+import { fetchWithRetry } from './fetchWithRetry.ts';
 
 const OPENAI_RESPONSES_URL = 'https://api.openai.com/v1/responses';
 const MODEL = 'gpt-4o-mini';
@@ -77,8 +78,30 @@ interface ResponsesApiResult {
  * idee.md Abschnitt 4. Alle Felder ausser confidence sind optional/nullable -
  * unsichere Daten muessen vom Nutzer clientseitig bestaetigt werden.
  */
+// OpenAIs "strict: true" Schema (oben) bindet nur, was das Modell selbst
+// zurueckgeben *soll* - ein Laufzeit-Check schuetzt zusaetzlich davor, ein
+// unerwartet geformtes Objekt (z.B. bei einer API-Aenderung) ungeprueft an
+// den Rest der App durchzureichen (vgl. Audit: bisher blindes JSON.parse+as).
+function isValidExtraction(value: unknown): value is RawTicketExtraction {
+  if (typeof value !== 'object' || value === null) return false;
+  const v = value as Record<string, unknown>;
+  const isStringOrNull = (x: unknown) => typeof x === 'string' || x === null;
+  return (
+    isStringOrNull(v.movieTitle) &&
+    isStringOrNull(v.date) &&
+    isStringOrNull(v.time) &&
+    isStringOrNull(v.cinema) &&
+    isStringOrNull(v.hall) &&
+    isStringOrNull(v.row) &&
+    isStringOrNull(v.seat) &&
+    (typeof v.price === 'number' || v.price === null) &&
+    typeof v.confidence === 'number' &&
+    isStringOrNull(v.rawText)
+  );
+}
+
 export async function extractTicketDataFromImage(imageUrl: string): Promise<RawTicketExtraction> {
-  const response = await fetch(OPENAI_RESPONSES_URL, {
+  const response = await fetchWithRetry(OPENAI_RESPONSES_URL, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${getApiKey()}`,
@@ -120,5 +143,16 @@ export async function extractTicketDataFromImage(imageUrl: string): Promise<RawT
     throw new Error('OpenAI hat keine verwertbare Antwort geliefert.');
   }
 
-  return JSON.parse(textContent) as RawTicketExtraction;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(textContent);
+  } catch (error) {
+    throw new Error(`OpenAI-Antwort war kein gueltiges JSON: ${error instanceof Error ? error.message : error}`);
+  }
+
+  if (!isValidExtraction(parsed)) {
+    throw new Error('OpenAI-Antwort hatte nicht die erwartete Form (Ticketextraktion).');
+  }
+
+  return parsed;
 }

@@ -30,8 +30,11 @@ export default {
       return Response.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
-    if (!providerId || typeof providerId !== "string") {
-      return Response.json({ error: "'providerId' ist erforderlich." }, { status: 400 });
+    // TMDB-IDs sind rein numerisch - providerId landet unten direkt im
+    // Request-Pfad an TMDB (_shared/tmdb.ts), ohne dieses Format-Check
+    // koennte ein Client den ausgehenden Pfad manipulieren.
+    if (!providerId || typeof providerId !== "string" || !/^\d+$/.test(providerId)) {
+      return Response.json({ error: "'providerId' muss eine numerische TMDB-ID sein." }, { status: 400 });
     }
 
     const allowed = await checkRateLimit(ctx.supabaseAdmin, userId, "movie-get", RATE_LIMIT, RATE_LIMIT_WINDOW_MINUTES);
