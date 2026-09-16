@@ -1,9 +1,22 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import * as Sentry from '@sentry/react-native';
 import { AuthProvider } from '../src/context/AuthContext';
 import { ThemeProvider, useTheme } from '../src/theme/ThemeContext';
 import { ThemeToggleButton } from '../src/theme/ThemeToggleButton';
+
+// Fehler-/Absturz-Tracking (siehe Code-Audit: bisher landeten Fehler nur in
+// console.error, ohne jede Sichtbarkeit auf echte Nutzer-Abstuerze). Bewusst
+// minimal gehalten - nur Error Monitoring, kein Tracing/Session
+// Replay/Metrics (unnoetiges Kontingent fuer diese Projektgroesse). In der
+// lokalen Entwicklung deaktiviert (enabled: !__DEV__), damit Test-/Debug-
+// Sessions nicht das Sentry-Dashboard mit Rauschen fuellen.
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  enabled: !__DEV__,
+  tracesSampleRate: 0,
+});
 
 function ThemedStack() {
   const { colors, mode } = useTheme();
@@ -39,7 +52,7 @@ function ThemedStack() {
   );
 }
 
-export default function RootLayout() {
+function RootLayout() {
   return (
     // Noetig fuer Swipe-Gesten (Wisch-zum-Loeschen in Bibliothek/Watchlist,
     // siehe SwipeableRow.tsx) - ohne diesen Wrapper funktionieren
@@ -53,3 +66,7 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 }
+
+// Sentry.wrap faengt Render-Fehler ab, die sonst unbemerkt zum weissen
+// Bildschirm fuehren wuerden, und haengt automatisch Touch-Breadcrumbs an.
+export default Sentry.wrap(RootLayout);
