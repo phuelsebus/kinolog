@@ -33,6 +33,7 @@ function ThemedStack() {
         <Stack.Screen name="legal/imprint" options={{ title: 'Impressum' }} />
         <Stack.Screen name="legal/privacy" options={{ title: 'Datenschutz' }} />
         <Stack.Screen name="legal/terms" options={{ title: 'Nutzungsbedingungen' }} />
+        <Stack.Screen name="+not-found" options={{ headerShown: false }} />
       </Stack>
     </>
   );
